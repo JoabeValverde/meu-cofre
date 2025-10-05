@@ -1,8 +1,7 @@
 // ---- CONFIGURAÇÃO DO SUPABASE ----
-const SUPABASE_URL = 'https://dqvsvzsmywoxtjgxvulj.supabase.co'; // Mantenha sua URL que já estava aqui
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxdnN2enNteXdveHRqZ3h2dWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MTQ5NDYsImV4cCI6MjA3NTE5MDk0Nn0.tG1JqQTydWxfUbTJzYInCps6d8F-awQNjIPSP138iMo'; // Mantenha sua chave que já estava aqui
+const SUPABASE_URL = 'SUA_URL_AQUI'; // Mantenha sua URL que já estava aqui
+const SUPABASE_KEY = 'SUA_CHAVE_ANON_AQUI'; // Mantenha sua chave que já estava aqui
 
-// CORREÇÃO: A variável agora se chama 'supabaseClient' para evitar conflito.
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ---------------------------------
 
@@ -20,31 +19,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusSelect = document.getElementById('status');
     const listaTransacoes = document.getElementById('lista-transacoes');
     const btnSubmit = document.getElementById('btn-submit');
-
+    const btnConfig = document.getElementById('btn-config');
+    const configSection = document.getElementById('config-section');
     const totalReceitasEl = document.getElementById('total-receitas');
     const totalDespesasEl = document.getElementById('total-despesas');
     const saldoAtualEl = document.getElementById('saldo-atual');
 
-    // ... (o resto dos seletores de elementos não muda)
-
     // --- ESTADO DA APLICAÇÃO (DADOS) ---
     let transacoes = [];
-
     let config = {
-        receitas: ['Salário PMI', 'Salário Ligmax', 'Extra Ligmax', 'Freelance', 'Vendas', 'Outros'],
+        receitas: ['Salário', 'Freelance', 'Vendas', 'Outros'],
         despesas: ['Alimentação', 'Transporte', 'Moradia', 'Lazer', 'Saúde', 'Outros'],
-        cartoes: ['Nubank', 'Bradesco', 'Caixa', 'Digio', 'Mercado Pago']
+        cartoes: ['Nubank', 'Inter', 'Caixa']
     };
-
     let idEmEdicao = null;
     let meuGrafico = null;
     let meuGraficoReceitas = null;
 
     // --- FUNÇÕES ---
 
-    // CORREÇÃO: Nova função para carregar os dados do Supabase
     const carregarTransacoes = async () => {
-        const { data, error } = await supabaseClient // Usando a variável corrigida
+        const { data, error } = await supabaseClient
             .from('transacoes')
             .select('*')
             .order('data', { ascending: false });
@@ -108,9 +103,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderizarTransacoes = () => {
-        const listaTransacoes = document.getElementById('lista-transacoes');
         listaTransacoes.innerHTML = '';
-        transacoes.forEach(t => { // Simplificado para sempre renderizar o que está na variável global
+        if (transacoes.length === 0) {
+            listaTransacoes.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px;">Nenhuma transação encontrada.</td></tr>';
+            return;
+        }
+        transacoes.forEach(t => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="tipo-${t.tipo}">${t.tipo}</td>
@@ -126,6 +124,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             `;
             listaTransacoes.appendChild(tr);
+        });
+    };
+
+    // CORREÇÃO: Função de popular selects agora está completa
+    const popularSelects = () => {
+        const tipoAtual = tipoSelect.value;
+        const categorias = tipoAtual === 'Receita' ? config.receitas : config.despesas;
+        categoriaSelect.innerHTML = '';
+        categorias.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat;
+            categoriaSelect.appendChild(option);
+        });
+
+        const filtroCartao = document.getElementById('filtro-cartao');
+        cartaoSelect.innerHTML = '<option value="">Nenhum</option>';
+        if (filtroCartao) filtroCartao.innerHTML = '<option value="Todos">Todos</option>';
+        
+        config.cartoes.forEach(cartao => {
+            const optionForm = document.createElement('option');
+            optionForm.value = cartao;
+            optionForm.textContent = cartao;
+            cartaoSelect.appendChild(optionForm.cloneNode(true));
+            if(filtroCartao) filtroCartao.appendChild(optionForm);
         });
     };
 
@@ -155,23 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
         tipoSelect.dispatchEvent(new Event('change'));
     };
 
-    const popularSelects = () => {
-        const tipoAtual = tipoSelect.value;
-        const categorias = tipoAtual === 'Receita' ? config.receitas : config.despesas;
-        categoriaSelect.innerHTML = '';
-        categorias.forEach(cat => {
-            const option = document.createElement('option');
-            option.value = cat;
-            option.textContent = cat;
-            categoriaSelect.appendChild(option);
-        });
-        // O resto da função continua igual...
-    };
-
-    // CORREÇÃO: Função de deletar agora é async e usa o Supabase
     window.deletarTransacao = async (id) => {
         if (confirm('Tem certeza que deseja deletar esta transação?')) {
-            const { error } = await supabaseClient // Usando a variável corrigida
+            const { error } = await supabaseClient
                 .from('transacoes')
                 .delete()
                 .eq('id', id);
@@ -193,7 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
         atualizarGraficoReceitas();
     };
 
-    // CORREÇÃO: Listener do formulário agora é async e usa o Supabase
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const dadosDaTransacao = {
@@ -207,15 +215,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         let error;
         if (idEmEdicao !== null) {
-            const { data, error: updateError } = await supabaseClient.from('transacoes').update(dadosDaTransacao).eq('id', idEmEdicao);
+            const { data, error: updateError } = await supabaseClient.from('transacoes').update(dadosDaTransacao).eq('id', idEmEdicao).select();
             error = updateError;
         } else {
-            const { data, error: insertError } = await supabaseClient.from('transacoes').insert([dadosDaTransacao]);
+            const { data, error: insertError } = await supabaseClient.from('transacoes').insert([dadosDaTransacao]).select();
             error = insertError;
         }
         if (error) {
-            console.error('Erro ao salvar transação:', error);
-            alert('Não foi possível salvar a transação.');
+            console.error('Erro detalhado do Supabase:', error);
+            alert('Não foi possível salvar a transação. Verifique o console (F12) para detalhes.');
         } else {
             await carregarTransacoes();
             cancelarEdicao();
@@ -226,10 +234,22 @@ document.addEventListener('DOMContentLoaded', () => {
     formaPagamentoSelect.addEventListener('change', () => {
         cartaoGroup.style.display = formaPagamentoSelect.value === 'Cartão de crédito' ? 'flex' : 'none';
     });
+    
+    // As funções de config e import/export continuam aqui mas a de config não salva na nuvem.
+    // Você pode decidir no futuro se quer removê-las ou adaptá-las para o Supabase.
+    btnConfig.addEventListener('click', () => {
+        const configReceitaTextarea = document.getElementById('config-receita');
+        const configDespesaTextarea = document.getElementById('config-despesa');
+        const configCartoesTextarea = document.getElementById('config-cartoes');
+        const isHidden = configSection.style.display === 'none';
+        configSection.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) {
+            configReceitaTextarea.value = config.receitas.join('\n');
+            configDespesaTextarea.value = config.despesas.join('\n');
+            configCartoesTextarea.value = config.cartoes.join('\n');
+        }
+    });
 
-    // ... (O resto do seu código, como os listeners de config e import/export, pode continuar aqui, embora as funções de config não salvem mais na nuvem)
-
-    // CORREÇÃO: init agora é async
     const init = async () => {
         dataInput.valueAsDate = new Date();
         await carregarTransacoes();
