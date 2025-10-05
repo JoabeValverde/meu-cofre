@@ -111,19 +111,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         transacoes.forEach(t => {
             const tr = document.createElement('tr');
+            // Dentro da função renderizarTransacoes, substitua o bloco tr.innerHTML por este:
             tr.innerHTML = `
-            <td class="tipo-${t.tipo}">${t.tipo}</td>
-            <td>${t.categoria}</td>
-            <td>${t.subcategoria || ''}</td> <td>${formatarMoeda(t.valor)}</td>
-            <td>${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-            <td>${t.forma}</td>
-            <td>${t.cartao || 'N/A'}</td>
-            <td><span class="status-${t.status.toLowerCase().replace('í', 'i')}">${t.status}</span></td>
-            <td>
-                <button class="action-button edit-button" onclick="prepararEdicao(${t.id})">✏️</button>
-                <button class="action-button" onclick="deletarTransacao(${t.id})">🗑️</button>
-            </td>
-        `;
+                <td class="tipo-${t.tipo}">${t.tipo}</td>
+                <td>${t.categoria}</td>
+                <td>${t.subcategoria || ''}</td>
+                <td>${formatarMoeda(t.valor)}</td>
+                <td>${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td>${t.forma}</td>
+                <td>${t.cartao || 'N/A'}</td>
+                <td><span class="status-${t.status.toLowerCase().replace('í', 'i')}">${t.status}</span></td>
+                <td>
+                    <button class="action-button edit-button" onclick="prepararEdicao(${t.id})">✏️</button>
+                    <button class="action-button" onclick="deletarTransacao(${t.id})">🗑️</button>
+                </td>
+            `;
             listaTransacoes.appendChild(tr);
         });
     };
