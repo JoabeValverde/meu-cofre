@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let transacoes = [];
     let config = {
         receitas: ['Salário PMI', 'Salário Ligmax', 'Extra Ligmax', 'Freelance', 'Vendas', 'Outros'],
-        despesas: ['Alimentação', 'Transporte', 'Moradia', 'Lazer', 'Saúde', 'Outros'],
+        despesas: ['Alimentação', 'Fatura Cartao Bradesco', 'Fatura Cartao Nubank', 'Fatura Cartao Digio', 'Fatura Cartao Mercado Pago', 'Transporte', 'Moradia', 'Lazer', 'Saúde', 'Outros'],
         cartoes: ['Nubank', 'Bradesco', 'Caixa', 'Mercado Pago', 'Digio']
     };
     let idEmEdicao = null;
