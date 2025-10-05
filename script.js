@@ -31,9 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let transacoes = [];
 
     let config = {
-        receitas: ['Salário', 'Freelance', 'Vendas', 'Outros'],
+        receitas: ['Salário PMI', 'Salário Ligmax', 'Extra Ligmax', 'Freelance', 'Vendas', 'Outros'],
         despesas: ['Alimentação', 'Transporte', 'Moradia', 'Lazer', 'Saúde', 'Outros'],
-        cartoes: ['Nubank', 'Inter', 'Caixa']
+        cartoes: ['Nubank', 'Bradesco', 'Caixa', 'Digio', 'Mercado Pago']
     };
 
     let idEmEdicao = null;
