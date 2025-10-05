@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalReceitasEl = document.getElementById('total-receitas');
     const totalDespesasEl = document.getElementById('total-despesas');
     const saldoAtualEl = document.getElementById('saldo-atual');
+    const subcategoriaInput = getElement('subcategoria');
 
     // --- ESTADO DA APLICAÇÃO (DADOS) ---
     let transacoes = [];
@@ -111,18 +112,18 @@ document.addEventListener('DOMContentLoaded', () => {
         transacoes.forEach(t => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="tipo-${t.tipo}">${t.tipo}</td>
-                <td>${t.categoria}</td>
-                <td>${formatarMoeda(t.valor)}</td>
-                <td>${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td>${t.forma}</td>
-                <td>${t.cartao || 'N/A'}</td>
-                <td><span class="status-${t.status.toLowerCase().replace('í', 'i')}">${t.status}</span></td>
-                <td>
-                    <button class="action-button edit-button" onclick="prepararEdicao(${t.id})">✏️</button>
-                    <button class="action-button" onclick="deletarTransacao(${t.id})">🗑️</button>
-                </td>
-            `;
+            <td class="tipo-${t.tipo}">${t.tipo}</td>
+            <td>${t.categoria}</td>
+            <td>${t.subcategoria || ''}</td> <td>${formatarMoeda(t.valor)}</td>
+            <td>${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+            <td>${t.forma}</td>
+            <td>${t.cartao || 'N/A'}</td>
+            <td><span class="status-${t.status.toLowerCase().replace('í', 'i')}">${t.status}</span></td>
+            <td>
+                <button class="action-button edit-button" onclick="prepararEdicao(${t.id})">✏️</button>
+                <button class="action-button" onclick="deletarTransacao(${t.id})">🗑️</button>
+            </td>
+        `;
             listaTransacoes.appendChild(tr);
         });
     };
@@ -158,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tipoSelect.value = transacao.tipo;
         tipoSelect.dispatchEvent(new Event('change'));
         categoriaSelect.value = transacao.categoria;
+        subcategoriaInput.value = transacao.subcategoria || '';
         valorInput.value = transacao.valor;
         dataInput.value = transacao.data;
         formaPagamentoSelect.value = transacao.forma;
@@ -207,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dadosDaTransacao = {
             tipo: tipoSelect.value,
             categoria: categoriaSelect.value,
+            subcategoria: subcategoriaInput.value.trim(),
             valor: parseFloat(valorInput.value),
             data: dataInput.value,
             forma: formaPagamentoSelect.value,
