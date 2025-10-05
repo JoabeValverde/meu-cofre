@@ -248,7 +248,7 @@ table th {
 }
 .tipo-Receita { color: var(--primary-color); font-weight: 600;}
 .tipo-Despesa { color: var(--secondary-color); font-weight: 600; }
-.status-concluído { background-color: #e8f5e9; color: var(--primary-color); padding: 4px 8px; border-radius: 12px; font-size: 0.85em; }
+.status-concluido { background-color: #e8f5e9; color: var(--primary-color); padding: 4px 8px; border-radius: 12px; font-size: 0.85em; }
 .status-pendente { background-color: #ffebee; color: var(--secondary-color); padding: 4px 8px; border-radius: 12px; font-size: 0.85em; }
 .action-button {
     background: none;
