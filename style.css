@@ -35,18 +35,7 @@ header {
     position: relative;
 }
 #btn-config {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 8px 15px;
-    border: none;
-    border-radius: 4px;
-    background-color: var(--accent-color);
-    color: white;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.3s;
+    display: none; /* Oculta o botão de configurações que não tem mais funcionalidade */
 }
 #btn-config:hover {
     background-color: #0d47a1;
@@ -56,12 +45,14 @@ h1 {
 }
 .dashboard {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     gap: 20px;
     margin-bottom: 30px;
 }
 .card {
     flex: 1;
+    min-width: 250px;
     background-color: var(--card-background);
     padding: 20px;
     border-radius: 8px;
@@ -80,6 +71,34 @@ h1 {
 .card.receitas p { color: var(--primary-color); }
 .card.despesas p { color: var(--secondary-color); }
 .card.saldo p { color: var(--accent-color); }
+
+.secao-graficos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+.grafico-card {
+    flex: 1;
+    min-width: 300px;
+    background-color: var(--card-background);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+.grafico-card h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    color: var(--text-color);
+}
+.chart-container {
+    position: relative;
+    height: 350px;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
 .nova-transacao h2, .transacoes h2, .config-section h2 {
     margin-bottom: 15px;
     border-bottom: 2px solid #ddd;
@@ -282,39 +301,4 @@ table th {
     .config-content {
         grid-template-columns: 1fr;
     }
-
-    /* Adicione este código no final do seu style.css */
-
-/* Novo container para os dois gráficos */
-.secao-graficos {
-    display: flex;
-    flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
-    gap: 20px; /* Espaço entre os gráficos */
-    margin-bottom: 30px;
-}
-
-/* Estilo para cada um dos cards de gráfico */
-.grafico-card {
-    flex: 1; /* Faz com que cada card tente ocupar o mesmo espaço */
-    min-width: 300px; /* Largura mínima antes de quebrar a linha */
-    background-color: var(--card-background);
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-}
-
-.grafico-card h2 {
-    text-align: center;
-    margin-bottom: 15px;
-    font-size: 1.2em;
-    color: var(--text-color);
-}
-
-.chart-container {
-    position: relative;
-    height: 350px;
-    width: 100%;
-    max-width: 400px;
-    margin: 0 auto;
-}
 }

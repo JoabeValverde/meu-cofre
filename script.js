@@ -28,9 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- ESTADO DA APLICAÇÃO (DADOS) ---
     let transacoes = [];
     let config = {
-        receitas: ['Salário', 'Freelance', 'Vendas', 'Outros'],
+        receitas: ['Salário PMI', 'Salário Ligmax', 'Extra Ligmax', 'Freelance', 'Vendas', 'Outros'],
         despesas: ['Alimentação', 'Transporte', 'Moradia', 'Lazer', 'Saúde', 'Outros'],
-        cartoes: ['Nubank', 'Inter', 'Caixa']
+        cartoes: ['Nubank', 'Bradesco', 'Caixa', 'Mercado Pago', 'Digio']
     };
     let idEmEdicao = null;
     let meuGrafico = null;
