@@ -186,24 +186,24 @@ document.addEventListener("DOMContentLoaded", () => {
     transacoes.forEach((t) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-                <td class="tipo-${t.tipo}">${t.tipo}</td><td>${
+              <td class="tipo-${t.tipo}">${t.tipo}</td><td>${
         t.categoria
       }</td><td>${t.subcategoria || ""}</td>
-                <td>${formatarMoeda(t.valor)}</td><td>${new Date(
+              <td>${formatarMoeda(t.valor)}</td><td>${new Date(
         t.data + "T00:00:00"
       ).toLocaleDateString("pt-BR")}</td>
-                <td>${t.forma}</td><td>${t.cartao || "N/A"}</td>
-                <td><span class="status-${t.status
-                  .toLowerCase()
-                  .replace("í", "i")}">${t.status}</span></td>
-                <td>
-                    <button class="action-button edit-button" onclick="prepararEdicao(${
-                      t.id
-                    })">✏️</button>
-                    <button class="action-button" onclick="deletarTransacao(${
-                      t.id
-                    })">🗑️</button>
-                </td>`;
+              <td>${t.forma}</td><td>${t.cartao || "N/A"}</td>
+              <td><span class="status-${t.status
+                .toLowerCase()
+                .replace("í", "i")}">${t.status}</span></td>
+              <td>
+                  <button class="action-button edit-button" onclick="prepararEdicao(${
+                    t.id
+                  })">✏️</button>
+                  <button class="action-button" onclick="deletarTransacao(${
+                    t.id
+                  })">🗑️</button>
+              </td>`;
       listaTransacoes.appendChild(tr);
     });
   };
@@ -354,7 +354,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   if (form) {
-    // AQUI ESTÁ A ALTERAÇÃO PRINCIPAL
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const {
@@ -376,7 +375,7 @@ document.addEventListener("DOMContentLoaded", () => {
           formaPagamentoSelect.value === "Cartão de crédito"
             ? cartaoSelect.value
             : null,
-        user_id: user.id, // NOVA LINHA ADICIONADA
+        user_id: user.id,
       };
       const { error } =
         idEmEdicao !== null
@@ -417,6 +416,7 @@ document.addEventListener("DOMContentLoaded", () => {
           configSection.style.display === "none" ? "block" : "none";
     });
   }
+  // Omiti as funções de import/export e config-salvar para simplicidade, pois não estão mais sendo usadas com o Supabase.
 
   // --- INICIALIZAÇÃO E CONTROLE DE ESTADO DE AUTENTICAÇÃO ---
   supabaseClient.auth.onAuthStateChange((_event, session) => {
