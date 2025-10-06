@@ -7,12 +7,11 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ---------------------------------
 
 document.addEventListener("DOMContentLoaded", () => {
-  // --- FUNÇÃO DE AUXÍLIO ---
   const getElement = (id) => {
     const element = document.getElementById(id);
     if (!element) {
       console.error(
-        `ERRO CRÍTICO: Elemento com ID '${id}' não foi encontrado no HTML.`
+        `ERRO: Elemento com ID '${id}' não foi encontrado no HTML.`
       );
       return null;
     }
@@ -47,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const showLogin = getElement("show-login");
   const btnLogout = getElement("btn-logout");
 
-  // --- ESTADO DA APLICAÇÃO (DADOS) ---
+  // --- ESTADO DA APLICAÇÃO ---
   let transacoes = [];
   let config = {
     receitas: [
@@ -72,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let meuGrafico = null;
   let meuGraficoReceitas = null;
 
-  // --- FUNÇÕES DE AUTENTICAÇÃO E CONTROLE DE TELA ---
+  // --- FUNÇÕES DE AUTENTICAÇÃO E UI ---
   const checkUserSession = async () => {
     const {
       data: { session },
@@ -87,15 +86,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // --- FUNÇÕES PRINCIPAIS DA APLICAÇÃO ---
+  // --- FUNÇÕES DA APLICAÇÃO ---
   const carregarTransacoes = async () => {
     const { data, error } = await supabaseClient
       .from("transacoes")
       .select("*")
       .order("data", { ascending: false });
     if (error) {
-      console.error("Erro ao buscar transações do Supabase:", error);
-      alert("Não foi possível carregar os dados. Verifique o console (F12).");
+      console.error("Erro ao buscar transações:", error);
+      alert("Não foi possível carregar os dados. Verifique o console.");
     } else {
       transacoes = data;
       atualizarTudo();
@@ -135,11 +134,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const transacoesFiltradas = transacoes.filter(
       (t) => t.tipo === tipoTransacao && t.status === "Concluído"
     );
-    const dadosPorCategoria = {};
-    transacoesFiltradas.forEach((t) => {
-      dadosPorCategoria[t.categoria] =
-        (dadosPorCategoria[t.categoria] || 0) + t.valor;
-    });
+    const dadosPorCategoria = transacoesFiltradas.reduce((acc, t) => {
+      acc[t.categoria] = (acc[t.categoria] || 0) + t.valor;
+      return acc;
+    }, {});
     const labels = Object.keys(dadosPorCategoria);
     const dataValues = Object.values(dadosPorCategoria);
     let graficoExistente =
@@ -186,24 +184,24 @@ document.addEventListener("DOMContentLoaded", () => {
     transacoes.forEach((t) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-              <td class="tipo-${t.tipo}">${t.tipo}</td><td>${
+                <td class="tipo-${t.tipo}">${t.tipo}</td><td>${
         t.categoria
       }</td><td>${t.subcategoria || ""}</td>
-              <td>${formatarMoeda(t.valor)}</td><td>${new Date(
+                <td>${formatarMoeda(t.valor)}</td><td>${new Date(
         t.data + "T00:00:00"
       ).toLocaleDateString("pt-BR")}</td>
-              <td>${t.forma}</td><td>${t.cartao || "N/A"}</td>
-              <td><span class="status-${t.status
-                .toLowerCase()
-                .replace("í", "i")}">${t.status}</span></td>
-              <td>
-                  <button class="action-button edit-button" onclick="prepararEdicao(${
-                    t.id
-                  })">✏️</button>
-                  <button class="action-button" onclick="deletarTransacao(${
-                    t.id
-                  })">🗑️</button>
-              </td>`;
+                <td>${t.forma}</td><td>${t.cartao || "N/A"}</td>
+                <td><span class="status-${t.status
+                  .toLowerCase()
+                  .replace("í", "i")}">${t.status}</span></td>
+                <td>
+                    <button class="action-button edit-button" onclick="prepararEdicao(${
+                      t.id
+                    })">✏️</button>
+                    <button class="action-button" onclick="deletarTransacao(${
+                      t.id
+                    })">🗑️</button>
+                </td>`;
       listaTransacoes.appendChild(tr);
     });
   };
@@ -310,6 +308,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
   if (signupForm) {
     signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -331,6 +330,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
   if (btnLogout) {
     btnLogout.addEventListener("click", async () => {
       const { error } = await supabaseClient.auth.signOut();
@@ -339,6 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
   if (showSignup) {
     showSignup.addEventListener("click", (e) => {
       e.preventDefault();
@@ -346,6 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
       signupView.classList.remove("hidden");
     });
   }
+
   if (showLogin) {
     showLogin.addEventListener("click", (e) => {
       e.preventDefault();
@@ -353,6 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loginView.classList.remove("hidden");
     });
   }
+
   if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -399,6 +402,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
   if (tipoSelect) tipoSelect.addEventListener("change", popularSelects);
   if (formaPagamentoSelect) {
     formaPagamentoSelect.addEventListener("change", () => {
@@ -407,18 +411,8 @@ document.addEventListener("DOMContentLoaded", () => {
           formaPagamentoSelect.value === "Cartão de crédito" ? "flex" : "none";
     });
   }
-  const btnConfig = getElement("btn-config");
-  const configSection = getElement("config-section");
-  if (btnConfig) {
-    btnConfig.addEventListener("click", () => {
-      if (configSection)
-        configSection.style.display =
-          configSection.style.display === "none" ? "block" : "none";
-    });
-  }
-  // Omiti as funções de import/export e config-salvar para simplicidade, pois não estão mais sendo usadas com o Supabase.
 
-  // --- INICIALIZAÇÃO E CONTROLE DE ESTADO DE AUTENTICAÇÃO ---
+  // --- INICIALIZAÇÃO ---
   supabaseClient.auth.onAuthStateChange((_event, session) => {
     checkUserSession();
   });
