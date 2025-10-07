@@ -23,9 +23,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const tipoSelect = getElement("tipo");
   const categoriaSelect = getElement("categoria");
   const subcategoriaInput = getElement("subcategoria");
+  const descricaoInput = getElement("descricao");
   const valorInput = getElement("valor");
   const dataInput = getElement("data");
   const formaPagamentoSelect = getElement("forma");
+  const parcelasGroup = getElement("group-parcelas");
+  const parcelasInput = getElement("parcelas");
   const cartaoGroup = getElement("group-cartao");
   const cartaoSelect = getElement("cartao");
   const statusSelect = getElement("status");
@@ -34,8 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const totalReceitasEl = getElement("total-receitas");
   const totalDespesasEl = getElement("total-despesas");
   const saldoAtualEl = getElement("saldo-atual");
-  const filtroTipo = getElement("filtro-tipo");
-  const filtroCartao = getElement("filtro-cartao");
   const authSection = getElement("auth-section");
   const appSection = getElement("app-section");
   const loginView = getElement("login-view");
@@ -88,9 +89,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- FUNÇÕES DA APLICAÇÃO ---
   const carregarTransacoes = async () => {
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
     const { data, error } = await supabaseClient
       .from("transacoes")
       .select("*")
+      .eq("user_id", user.id)
       .order("data", { ascending: false });
     if (error) {
       console.error("Erro ao buscar transações:", error);
@@ -178,30 +185,33 @@ document.addEventListener("DOMContentLoaded", () => {
     listaTransacoes.innerHTML = "";
     if (!transacoes || transacoes.length === 0) {
       listaTransacoes.innerHTML =
-        '<tr><td colspan="9" style="text-align:center; padding: 20px;">Nenhuma transação encontrada.</td></tr>';
+        '<tr role="row"><td colspan="10" style="text-align:center; padding: 20px;">Nenhuma transação encontrada.</td></tr>';
       return;
     }
     transacoes.forEach((t) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-                <td class="tipo-${t.tipo}">${t.tipo}</td><td>${
-        t.categoria
-      }</td><td>${t.subcategoria || ""}</td>
-                <td>${formatarMoeda(t.valor)}</td><td>${new Date(
-        t.data + "T00:00:00"
-      ).toLocaleDateString("pt-BR")}</td>
-                <td>${t.forma}</td><td>${t.cartao || "N/A"}</td>
-                <td><span class="status-${t.status
-                  .toLowerCase()
-                  .replace("í", "i")}">${t.status}</span></td>
-                <td>
-                    <button class="action-button edit-button" onclick="prepararEdicao(${
-                      t.id
-                    })">✏️</button>
-                    <button class="action-button" onclick="deletarTransacao(${
-                      t.id
-                    })">🗑️</button>
-                </td>`;
+              <td class="tipo-${t.tipo}">${t.tipo}</td>
+              <td>${t.descricao || ""}</td>
+              <td>${t.categoria}</td>
+              <td>${t.subcategoria || ""}</td>
+              <td>${formatarMoeda(t.valor)}</td>
+              <td>${new Date(t.data + "T00:00:00").toLocaleDateString(
+                "pt-BR"
+              )}</td>
+              <td>${t.forma}</td>
+              <td>${t.cartao || "N/A"}</td>
+              <td><span class="status-${t.status
+                .toLowerCase()
+                .replace("í", "i")}">${t.status}</span></td>
+              <td>
+                  <button class="action-button edit-button" onclick="prepararEdicao(${
+                    t.id
+                  })">✏️</button>
+                  <button class="action-button" onclick="deletarTransacao(${
+                    t.id
+                  })">🗑️</button>
+              </td>`;
       listaTransacoes.appendChild(tr);
     });
   };
@@ -218,13 +228,14 @@ document.addEventListener("DOMContentLoaded", () => {
       option.textContent = cat;
       categoriaSelect.appendChild(option);
     });
+    const filtroCartao = getElement("filtro-cartao");
     cartaoSelect.innerHTML = '<option value="">Nenhum</option>';
     if (filtroCartao)
       filtroCartao.innerHTML = '<option value="Todos">Todos</option>';
     config.cartoes.forEach((cartao) => {
       const optionForm = document.createElement("option");
       optionForm.value = cartao;
-      optionForm.textContent = cartao;
+      option.textContent = cartao;
       cartaoSelect.appendChild(optionForm.cloneNode(true));
       if (filtroCartao) filtroCartao.appendChild(optionForm);
     });
@@ -237,6 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tipoSelect.dispatchEvent(new Event("change"));
     categoriaSelect.value = transacao.categoria;
     subcategoriaInput.value = transacao.subcategoria || "";
+    descricaoInput.value = transacao.descricao || "";
     valorInput.value = transacao.valor;
     dataInput.value = transacao.data;
     formaPagamentoSelect.value = transacao.forma;
@@ -297,11 +309,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = getElement("login-email").value;
-      const password = getElement("login-password").value;
       const { error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
+        email: getElement("login-email").value,
+        password: getElement("login-password").value,
       });
       if (error) {
         alert("Erro no login: " + error.message);
@@ -312,13 +322,15 @@ document.addEventListener("DOMContentLoaded", () => {
   if (signupForm) {
     signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = getElement("signup-email").value;
       const password = getElement("signup-password").value;
       if (password.length < 6) {
         alert("A senha deve ter no mínimo 6 caracteres.");
         return;
       }
-      const { error } = await supabaseClient.auth.signUp({ email, password });
+      const { error } = await supabaseClient.auth.signUp({
+        email: getElement("signup-email").value,
+        password: password,
+      });
       if (error) {
         alert("Erro ao criar conta: " + error.message);
       } else {
@@ -333,10 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnLogout) {
     btnLogout.addEventListener("click", async () => {
-      const { error } = await supabaseClient.auth.signOut();
-      if (error) {
-        alert("Erro ao sair: " + error.message);
-      }
+      await supabaseClient.auth.signOut();
     });
   }
 
@@ -366,31 +375,90 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Você precisa estar logado para criar uma transação.");
         return;
       }
-      const dadosDaTransacao = {
-        tipo: tipoSelect.value,
-        categoria: categoriaSelect.value,
-        subcategoria: subcategoriaInput.value.trim(),
-        valor: parseFloat(valorInput.value),
-        data: dataInput.value,
-        forma: formaPagamentoSelect.value,
-        status: statusSelect.value,
-        cartao:
-          formaPagamentoSelect.value === "Cartão de crédito"
-            ? cartaoSelect.value
-            : null,
-        user_id: user.id,
-      };
-      const { error } =
-        idEmEdicao !== null
-          ? await supabaseClient
-              .from("transacoes")
-              .update(dadosDaTransacao)
-              .eq("id", idEmEdicao)
-              .select()
-          : await supabaseClient
-              .from("transacoes")
-              .insert([dadosDaTransacao])
-              .select();
+
+      const valorTotal = parseFloat(valorInput.value);
+      const numeroParcelas = parseInt(parcelasInput.value, 10);
+      const formaPagamento = formaPagamentoSelect.value;
+      const descricao = descricaoInput.value.trim();
+
+      let transacoesParaSalvar = [];
+      let error = null;
+
+      if (formaPagamento === "Cartão de crédito" && numeroParcelas > 1) {
+        // --- LÓGICA DE PARCELAMENTO ---
+        const valorParcela = parseFloat(
+          (valorTotal / numeroParcelas).toFixed(2)
+        );
+        const dataInicial = new Date(dataInput.value + "T03:00:00");
+        const grupoParcelaUUID = crypto.randomUUID();
+        let somaParcelas = 0;
+
+        for (let i = 0; i < numeroParcelas; i++) {
+          const dataParcela = new Date(dataInicial);
+          dataParcela.setMonth(dataInicial.getMonth() + i);
+
+          let valorDaParcelaAtual = valorParcela;
+          somaParcelas += valorParcela;
+
+          // Na última parcela, ajusta a diferença de arredondamento
+          if (i === numeroParcelas - 1) {
+            valorDaParcelaAtual += valorTotal - somaParcelas;
+            valorDaParcelaAtual = parseFloat(valorDaParcelaAtual.toFixed(2));
+          }
+
+          const transacaoParcelada = {
+            tipo: "Despesa",
+            categoria: categoriaSelect.value,
+            subcategoria: subcategoriaInput.value.trim(),
+            descricao: `${descricao || "Parcelado"} (${
+              i + 1
+            }/${numeroParcelas})`,
+            valor: valorDaParcelaAtual,
+            data: dataParcela.toISOString().split("T")[0],
+            forma: formaPagamento,
+            status: "Pendente",
+            cartao: cartaoSelect.value,
+            user_id: user.id,
+            grupo_parcela: grupoParcelaUUID,
+          };
+          transacoesParaSalvar.push(transacaoParcelada);
+        }
+
+        const { error: insertError } = await supabaseClient
+          .from("transacoes")
+          .insert(transacoesParaSalvar)
+          .select();
+        error = insertError;
+      } else {
+        // --- LÓGICA DE TRANSAÇÃO ÚNICA (COMO ANTES) ---
+        const dadosDaTransacao = {
+          tipo: tipoSelect.value,
+          categoria: categoriaSelect.value,
+          subcategoria: subcategoriaInput.value.trim(),
+          descricao: descricao,
+          valor: valorTotal,
+          data: dataInput.value,
+          forma: formaPagamento,
+          status: statusSelect.value,
+          cartao:
+            formaPagamento === "Cartão de crédito" ? cartaoSelect.value : null,
+          user_id: user.id,
+        };
+
+        const { error: dbError } =
+          idEmEdicao !== null
+            ? await supabaseClient
+                .from("transacoes")
+                .update(dadosDaTransacao)
+                .eq("id", idEmEdicao)
+                .select()
+            : await supabaseClient
+                .from("transacoes")
+                .insert([dadosDaTransacao])
+                .select();
+        error = dbError;
+      }
+
       if (error) {
         console.error("Erro detalhado do Supabase:", error);
         alert(
@@ -404,15 +472,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (tipoSelect) tipoSelect.addEventListener("change", popularSelects);
+
   if (formaPagamentoSelect) {
     formaPagamentoSelect.addEventListener("change", () => {
-      if (cartaoGroup)
-        cartaoGroup.style.display =
-          formaPagamentoSelect.value === "Cartão de crédito" ? "flex" : "none";
+      const isCartao = formaPagamentoSelect.value === "Cartão de crédito";
+      if (cartaoGroup) cartaoGroup.style.display = isCartao ? "flex" : "none";
+      if (parcelasGroup) parcelasGroup.classList.toggle("hidden", !isCartao);
     });
   }
 
-  // --- INICIALIZAÇÃO ---
+  // --- INICIALIZAÇÃO E CONTROLE DE ESTADO DE AUTENTICAÇÃO ---
   supabaseClient.auth.onAuthStateChange((_event, session) => {
     checkUserSession();
   });
