@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Cofre</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div id="auth-section">
@@ -31,6 +33,7 @@
             </div>
         </div>
     </div>
+
     <div id="app-section" class="hidden">
         <div class="container">
             <header>
@@ -38,22 +41,25 @@
                 <p>Seu controle financeiro pessoal.</p>
                 <button id="btn-logout" class="logout-button">Sair</button>
             </header>
+            
             <section class="dashboard">
                 <div class="card receitas"><h3>Receitas Totais (Concluídas)</h3><p id="total-receitas">R$ 0,00</p></div>
                 <div class="card despesas"><h3>Despesas Totais (Concluídas)</h3><p id="total-despesas">R$ 0,00</p></div>
                 <div class="card saldo"><h3>Saldo Atual</h3><p id="saldo-atual">R$ 0,00</p></div>
             </section>
+            
             <section class="secao-graficos">
                 <div class="grafico-card"><h2>Despesas por Categoria</h2><div class="chart-container"><canvas id="graficoDespesas"></canvas></div></div>
                 <div class="grafico-card"><h2>Receitas por Categoria</h2><div class="chart-container"><canvas id="graficoReceitas"></canvas></div></div>
             </section>
+
             <section class="nova-transacao">
                 <h2>Nova Transação</h2>
                 <form id="form-transacao">
                     <div class="form-group"><label for="tipo">Tipo</label><select id="tipo" required><option value="Receita">Receita</option><option value="Despesa">Despesa</option></select></div>
                     <div class="form-group"><label for="categoria">Categoria</label><select id="categoria" required></select></div>
-                    <div class="form-group"><label for="subcategoria">Subcategoria (Opcional)</label><input type="text" id="subcategoria" placeholder="Ex: Faculdade, etc."></div>
-                    <div class="form-group"><label for="descricao">Descrição (Opcional)</label><input type="text" id="descricao" placeholder="Ex: Geladeira, etc."></div>
+                    <div class="form-group"><label for="subcategoria">Subcategoria (Opcional)</label><input type="text" id="subcategoria" placeholder="Ex: Faculdade, Supermercado, etc."></div>
+                    <div class="form-group"><label for="descricao">Descrição (Opcional)</label><input type="text" id="descricao" placeholder="Ex: Geladeira nova, presente, etc."></div>
                     <div class="form-group"><label for="valor">Valor (R$)</label><input type="number" id="valor" step="0.01" required></div>
                     <div class="form-group"><label for="data">Data</label><input type="date" id="data" required></div>
                     <div class="form-group"><label for="forma">Forma de Pagamento</label><select id="forma" required><option value="PIX">PIX</option><option value="Dinheiro">Dinheiro</option><option value="Transferência">Transferência</option><option value="Cartão de crédito">Cartão de crédito</option></select></div>
@@ -63,6 +69,7 @@
                     <button type="submit" id="btn-submit">Adicionar Transação</button>
                 </form>
             </section>
+
             <section class="transacoes">
                 <h2>Histórico de Transações</h2>
                 <div class="actions-filters">
@@ -70,12 +77,24 @@
                         <label for="filtro-tipo">Filtrar por tipo:</label><select id="filtro-tipo"><option value="Todos">Todos</option><option value="Receita">Receita</option><option value="Despesa">Despesa</option></select>
                         <label for="filtro-cartao">Filtrar por cartão:</label><select id="filtro-cartao"><option value="Todos">Todos</option></select>
                     </div>
+                    <div class="backup-buttons">
+                        <button id="btn-exportar">Exportar JSON</button><button id="btn-importar">Importar JSON</button><input type="file" id="input-importar" accept=".json">
+                    </div>
                 </div>
                 <div class="transacoes-tabela">
                     <table>
                         <thead>
                             <tr>
-                                <th>Tipo</th><th>Descrição</th><th>Categoria</th><th>Subcategoria</th><th>Valor</th><th>Data</th><th>Pagamento</th><th>Cartão</th><th>Status</th><th>Ações</th>
+                                <th>Tipo</th>
+                                <th>Descrição</th>
+                                <th>Categoria</th>
+                                <th>Subcategoria</th>
+                                <th>Valor</th>
+                                <th>Data</th>
+                                <th>Pagamento</th>
+                                <th>Cartão</th>
+                                <th>Status</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody id="lista-transacoes"></tbody>
@@ -85,8 +104,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>
 </html>

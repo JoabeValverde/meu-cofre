@@ -34,7 +34,9 @@ header {
     box-shadow: var(--shadow);
     position: relative;
 }
-h1 { font-size: 2em; }
+h1 {
+    font-size: 2em;
+}
 .dashboard {
     display: flex;
     flex-wrap: wrap;
@@ -63,6 +65,7 @@ h1 { font-size: 2em; }
 .card.receitas p { color: var(--primary-color); }
 .card.despesas p { color: var(--secondary-color); }
 .card.saldo p { color: var(--accent-color); }
+
 .secao-graficos {
     display: flex;
     flex-wrap: wrap;
