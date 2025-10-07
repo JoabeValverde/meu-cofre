@@ -10,9 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const getElement = (id) => {
     const element = document.getElementById(id);
     if (!element) {
-      console.error(
-        `ERRO: Elemento com ID '${id}' não foi encontrado no HTML.`
-      );
+      console.error(`ERRO: Elemento com ID '${id}' não foi encontrado.`);
       return null;
     }
     return element;
@@ -49,49 +47,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- ESTADO DA APLICAÇÃO ---
   let transacoes = [];
-  let config = {
-    receitas: [],
-    despesas: [],
-    cartoes: [],
-  };
+  let config = { receitas: [], despesas: [], cartoes: [] };
   let idEmEdicao = null;
   let meuGrafico = null;
   let meuGraficoReceitas = null;
 
-  // --- FUNÇÕES DE AUTENTICAÇÃO E UI ---
+  // --- FUNÇÕES DE AUTENTICAÇÃO E CONFIGURAÇÃO ---
   const carregarConfiguracoesUsuario = async (user) => {
-    const { data: categoriasData, error: categoriasError } =
-      await supabaseClient
-        .from("categorias")
-        .select("nome, tipo")
-        .eq("user_id", user.id);
-    const { data: cartoesData, error: cartoesError } = await supabaseClient
+    const { data: categoriasData, error: catError } = await supabaseClient
+      .from("categorias")
+      .select("nome, tipo")
+      .eq("user_id", user.id);
+    const { data: cartoesData, error: carError } = await supabaseClient
       .from("cartoes")
       .select("nome")
       .eq("user_id", user.id);
-
-    if (categoriasError || cartoesError) {
-      console.error(
-        "Erro ao carregar configurações:",
-        categoriasError || cartoesError
-      );
-      alert("Não foi possível carregar suas configurações personalizadas.");
+    if (catError || carError) {
+      console.error("Erro ao carregar configurações:", catError || carError);
       return;
     }
-
     const fallbackConfig = {
       receitas: ["Salário", "Freelance", "Vendas", "Outros"],
-      despesas: [
-        "Alimentação",
-        "Transporte",
-        "Moradia",
-        "Lazer",
-        "Saúde",
-        "Outros",
-      ],
-      cartoes: ["Nubank", "Inter", "Caixa"],
+      despesas: ["Alimentação", "Transporte", "Moradia", "Lazer", "Outros"],
+      cartoes: ["Cartão Padrão"],
     };
-
     config.receitas = categoriasData
       .filter((c) => c.tipo === "Receita")
       .map((c) => c.nome);
@@ -99,7 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .filter((c) => c.tipo === "Despesa")
       .map((c) => c.nome);
     config.cartoes = cartoesData.map((c) => c.nome);
-
     if (config.receitas.length === 0) config.receitas = fallbackConfig.receitas;
     if (config.despesas.length === 0) config.despesas = fallbackConfig.despesas;
     if (config.cartoes.length === 0) config.cartoes = fallbackConfig.cartoes;
@@ -130,7 +108,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .order("data", { ascending: false });
     if (error) {
       console.error("Erro ao buscar transações:", error);
-      alert("Não foi possível carregar os dados. Verifique o console.");
     } else {
       transacoes = data;
       atualizarTudo();
@@ -163,108 +140,138 @@ document.addEventListener("DOMContentLoaded", () => {
       saldo < 0 ? "var(--secondary-color)" : "var(--accent-color)";
   };
 
-  const atualizarGrafico = (idCanvas, tipoTransacao, cores) => {
-    const canvas = getElement(idCanvas);
+  const atualizarGraficoDespesas = () => {
+    const canvas = getElement("graficoDespesas");
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    const transacoesFiltradas = transacoes.filter(
-      (t) => t.tipo === tipoTransacao && t.status === "Concluído"
+    const dados = transacoes.filter(
+      (t) => t.tipo === "Despesa" && t.status === "Concluído"
     );
-    const dadosPorCategoria = transacoesFiltradas.reduce((acc, t) => {
+    const dataMap = dados.reduce((acc, t) => {
       acc[t.categoria] = (acc[t.categoria] || 0) + t.valor;
       return acc;
     }, {});
-    const labels = Object.keys(dadosPorCategoria);
-    const dataValues = Object.values(dadosPorCategoria);
-    let graficoExistente =
-      tipoTransacao === "Despesa" ? meuGrafico : meuGraficoReceitas;
-    if (graficoExistente) graficoExistente.destroy();
+    const labels = Object.keys(dataMap);
+    const dataValues = Object.values(dataMap);
+    if (meuGrafico) meuGrafico.destroy();
     if (labels.length === 0) {
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       return;
     }
-    const novoGrafico = new Chart(ctx, {
+    meuGrafico = new Chart(ctx, {
       type: "pie",
       data: {
         labels,
         datasets: [
           {
-            label: `${tipoTransacao}s por Categoria`,
             data: dataValues,
-            backgroundColor: cores,
+            backgroundColor: [
+              "#F44336",
+              "#E91E63",
+              "#9C27B0",
+              "#673AB7",
+              "#3F51B5",
+            ],
             hoverOffset: 4,
           },
         ],
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: "top" } },
-      },
+      options: { plugins: { legend: { display: false } } },
     });
-    if (tipoTransacao === "Despesa") {
-      meuGrafico = novoGrafico;
-    } else {
-      meuGraficoReceitas = novoGrafico;
+  };
+
+  const atualizarGraficoReceitas = () => {
+    const canvas = getElement("graficoReceitas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const dados = transacoes.filter(
+      (t) => t.tipo === "Receita" && t.status === "Concluído"
+    );
+    const dataMap = dados.reduce((acc, t) => {
+      acc[t.categoria] = (acc[t.categoria] || 0) + t.valor;
+      return acc;
+    }, {});
+    const labels = Object.keys(dataMap);
+    const dataValues = Object.values(dataMap);
+    if (meuGraficoReceitas) meuGraficoReceitas.destroy();
+    if (labels.length === 0) {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      return;
     }
+    meuGraficoReceitas = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels,
+        datasets: [
+          {
+            data: dataValues,
+            backgroundColor: [
+              "#4CAF50",
+              "#8BC34A",
+              "#00BCD4",
+              "#03A9F4",
+              "#2196F3",
+            ],
+            hoverOffset: 4,
+          },
+        ],
+      },
+      options: { plugins: { legend: { display: false } } },
+    });
   };
 
   const renderizarTransacoes = () => {
     if (!listaTransacoes) return;
-    listaTransacoes.innerHTML = "";
-    if (!transacoes || transacoes.length === 0) {
-      listaTransacoes.innerHTML =
-        '<tr><td colspan="10" style="text-align:center; padding: 20px;">Nenhuma transação encontrada.</td></tr>';
-      return;
-    }
-    transacoes.forEach((t) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-              <td class="tipo-${t.tipo}">${t.tipo}</td><td>${
-        t.descricao || ""
-      }</td><td>${t.categoria}</td>
-              <td>${t.subcategoria || ""}</td><td>${formatarMoeda(t.valor)}</td>
-              <td>${new Date(t.data + "T00:00:00").toLocaleDateString(
-                "pt-BR"
-              )}</td>
-              <td>${t.forma}</td><td>${t.cartao || "N/A"}</td>
-              <td><span class="status-${t.status
-                .toLowerCase()
-                .replace("í", "i")}">${t.status}</span></td>
-              <td>
-                  <button class="action-button edit-button" onclick="prepararEdicao(${
-                    t.id
-                  })">✏️</button>
-                  <button class="action-button" onclick="deletarTransacao(${
-                    t.id
-                  })">🗑️</button>
-              </td>`;
-      listaTransacoes.appendChild(tr);
-    });
+    listaTransacoes.innerHTML =
+      !transacoes || transacoes.length === 0
+        ? '<tr><td colspan="10" style="text-align:center; padding: 20px;">Nenhuma transação encontrada.</td></tr>'
+        : "";
+    if (transacoes)
+      transacoes.forEach((t) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${t.tipo}</td><td>${t.descricao || ""}</td><td>${
+          t.categoria
+        }</td><td>${t.subcategoria || ""}</td><td>${formatarMoeda(
+          t.valor
+        )}</td><td>${new Date(t.data + "T00:00:00").toLocaleDateString(
+          "pt-BR"
+        )}</td><td>${t.forma}</td><td>${
+          t.cartao || "N/A"
+        }</td><td><span class="status-${t.status
+          .toLowerCase()
+          .replace("í", "i")}">${
+          t.status
+        }</span></td><td><button class="action-button edit-button" onclick="prepararEdicao(${
+          t.id
+        })">✏️</button><button class="action-button" onclick="deletarTransacao(${
+          t.id
+        })">🗑️</button></td>`;
+        listaTransacoes.appendChild(tr);
+      });
   };
 
   const popularSelects = () => {
+    const filtroCartao = getElement("filtro-cartao");
     if (!tipoSelect || !categoriaSelect || !cartaoSelect) return;
     const tipoAtual = tipoSelect.value;
     const categorias =
       tipoAtual === "Receita" ? config.receitas : config.despesas;
     categoriaSelect.innerHTML = "";
     categorias.forEach((cat) => {
-      const option = document.createElement("option");
-      option.value = cat;
-      option.textContent = cat;
-      categoriaSelect.appendChild(option);
+      const opt = document.createElement("option");
+      opt.value = cat;
+      opt.textContent = cat;
+      categoriaSelect.appendChild(opt);
     });
-    const filtroCartao = getElement("filtro-cartao");
     cartaoSelect.innerHTML = '<option value="">Nenhum</option>';
     if (filtroCartao)
       filtroCartao.innerHTML = '<option value="Todos">Todos</option>';
     config.cartoes.forEach((cartao) => {
-      const optionForm = document.createElement("option");
-      optionForm.value = cartao;
-      option.textContent = cartao;
-      cartaoSelect.appendChild(optionForm.cloneNode(true));
-      if (filtroCartao) filtroCartao.appendChild(optionForm);
+      const opt = document.createElement("option");
+      opt.value = cartao;
+      opt.textContent = cartao;
+      cartaoSelect.appendChild(opt.cloneNode(true));
+      if (filtroCartao) filtroCartao.appendChild(opt);
     });
   };
 
@@ -307,7 +314,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .eq("id", id);
       if (error) {
         console.error("Erro ao deletar:", error);
-        alert("Não foi possível deletar a transação.");
       } else {
         await carregarTransacoes(user);
       }
@@ -319,83 +325,57 @@ document.addEventListener("DOMContentLoaded", () => {
     atualizarDashboard();
     renderizarTransacoes();
     popularSelects();
-    atualizarGrafico("graficoDespesas", "Despesa", [
-      "#F44336",
-      "#E91E63",
-      "#9C27B0",
-      "#673AB7",
-      "#3F51B5",
-    ]);
-    atualizarGrafico("graficoReceitas", "Receita", [
-      "#4CAF50",
-      "#8BC34A",
-      "#00BCD4",
-      "#03A9F4",
-      "#2196F3",
-    ]);
+    atualizarGraficoDespesas();
+    atualizarGraficoReceitas();
   };
 
-  // --- LISTENERS DE EVENTOS ---
-  if (loginForm) {
+  if (loginForm)
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const { error } = await supabaseClient.auth.signInWithPassword({
         email: getElement("login-email").value,
         password: getElement("login-password").value,
       });
-      if (error) {
-        alert("Erro no login: " + error.message);
-      }
+      if (error) alert("Erro: " + error.message);
     });
-  }
-
-  if (signupForm) {
+  if (signupForm)
     signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const password = getElement("signup-password").value;
-      if (password.length < 6) {
+      const pass = getElement("signup-password").value;
+      if (pass.length < 6) {
         alert("A senha deve ter no mínimo 6 caracteres.");
         return;
       }
       const { error } = await supabaseClient.auth.signUp({
         email: getElement("signup-email").value,
-        password: password,
+        password: pass,
       });
       if (error) {
-        alert("Erro ao criar conta: " + error.message);
+        alert("Erro: " + error.message);
       } else {
-        alert(
-          "Conta criada! Verifique seu email para confirmar e depois faça o login."
-        );
+        alert("Conta criada! Verifique seu email.");
         signupView.classList.add("hidden");
         loginView.classList.remove("hidden");
       }
     });
-  }
-
-  if (btnLogout) {
-    btnLogout.addEventListener("click", async () => {
-      await supabaseClient.auth.signOut();
-    });
-  }
-
-  if (showSignup) {
+  if (btnLogout)
+    btnLogout.addEventListener(
+      "click",
+      async () => await supabaseClient.auth.signOut()
+    );
+  if (showSignup)
     showSignup.addEventListener("click", (e) => {
       e.preventDefault();
       loginView.classList.add("hidden");
       signupView.classList.remove("hidden");
     });
-  }
-
-  if (showLogin) {
+  if (showLogin)
     showLogin.addEventListener("click", (e) => {
       e.preventDefault();
       signupView.classList.add("hidden");
       loginView.classList.remove("hidden");
     });
-  }
-
-  if (form) {
+  if (form)
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const {
@@ -405,23 +385,19 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Você precisa estar logado para criar uma transação.");
         return;
       }
-
       const valorTotal = parseFloat(valorInput.value);
       const numeroParcelas = parseInt(parcelasInput.value, 10);
       const formaPagamento = formaPagamentoSelect.value;
       const descricao = descricaoInput.value.trim();
-
-      let transacoesParaSalvar = [];
       let error = null;
-
       if (formaPagamento === "Cartão de crédito" && numeroParcelas > 1) {
+        const transacoesParaSalvar = [];
         const valorParcela = parseFloat(
           (valorTotal / numeroParcelas).toFixed(2)
         );
         const dataInicial = new Date(dataInput.value + "T03:00:00");
         const grupoParcelaUUID = crypto.randomUUID();
         let somaParcelas = 0;
-
         for (let i = 0; i < numeroParcelas; i++) {
           const dataParcela = new Date(dataInicial);
           dataParcela.setMonth(dataInicial.getMonth() + i);
@@ -447,7 +423,6 @@ document.addEventListener("DOMContentLoaded", () => {
             grupo_parcela: grupoParcelaUUID,
           });
         }
-
         const { error: insertError } = await supabaseClient
           .from("transacoes")
           .insert(transacoesParaSalvar)
@@ -467,7 +442,6 @@ document.addEventListener("DOMContentLoaded", () => {
             formaPagamento === "Cartão de crédito" ? cartaoSelect.value : null,
           user_id: user.id,
         };
-
         const { error: dbError } =
           idEmEdicao !== null
             ? await supabaseClient
@@ -481,19 +455,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 .select();
         error = dbError;
       }
-
       if (error) {
         console.error("Erro detalhado do Supabase:", error);
-        alert(
-          "Não foi possível salvar a transação. Verifique o console (F12) para detalhes."
-        );
+        alert("Não foi possível salvar a transação.");
       } else {
         await carregarTransacoes(user);
         cancelarEdicao();
       }
     });
-  }
-
   if (tipoSelect) tipoSelect.addEventListener("change", popularSelects);
   if (formaPagamentoSelect) {
     formaPagamentoSelect.addEventListener("change", () => {
@@ -503,14 +472,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- INICIALIZAÇÃO E CONTROLE DE ESTADO DE AUTENTICAÇÃO ---
-  supabaseClient.auth.onAuthStateChange((_event, session) => {
-    checkUserSession();
-  });
-
+  supabaseClient.auth.onAuthStateChange((_event, session) =>
+    checkUserSession()
+  );
   const init = () => {
     if (dataInput) dataInput.valueAsDate = new Date();
   };
-
   init();
 });
