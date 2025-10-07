@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 //Peço desculpas, para evitar erros, aqui está o arquivo completo sem omissões. Por favor, substitua o seu por este.
 
-JavaScript
+//JavaScript
 
 // ---- CONFIGURAÇÃO DO SUPABASE ----
 const SUPABASE_URL = 'SUA_URL_AQUI'; // CERTIFIQUE-SE QUE SUA URL REAL ESTÁ AQUI
