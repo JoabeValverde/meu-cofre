@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Cofre</title>
     <link rel="stylesheet" href="style.css">
-    </head>
+</head>
 <body>
     <div id="auth-section">
         <div class="auth-container">
@@ -17,6 +17,7 @@
                     <div class="form-group"><label for="login-password">Senha</label><input type="password" id="login-password" required></div>
                     <button type="submit" class="auth-button">Entrar</button>
                 </form>
+                <p class="auth-toggle"><a href="#" id="show-forgot-password">Esqueci minha senha</a></p>
                 <p class="auth-toggle">Não tem uma conta? <a href="#" id="show-signup">Cadastre-se</a></p>
             </div>
             <div id="signup-view" class="hidden">
@@ -29,70 +30,19 @@
                 </form>
                 <p class="auth-toggle">Já tem uma conta? <a href="#" id="show-login">Faça o login</a></p>
             </div>
-            <div id="reset-password-view" class="hidden">
-                <h2>Crie sua Nova Senha</h2>
-                <form id="reset-password-form">
-                    <div class="form-group">
-                        <label for="new-password">Nova Senha</label>
-                        <input type="password" id="new-password" placeholder="Mínimo 6 caracteres" required>
-                    </div>
-                    <button type="submit" class="auth-button">Salvar Nova Senha</button>
+             <div id="forgot-password-view" class="hidden">
+                <h2>Redefinir Senha</h2>
+                <form id="forgot-password-form">
+                    <div class="form-group"><label for="forgot-email">Email</label><input type="email" id="forgot-email" placeholder="Digite seu email de cadastro" required></div>
+                    <button type="submit" class="auth-button">Enviar Link de Redefinição</button>
                 </form>
+                 <p class="auth-toggle">Lembrou a senha? <a href="#" id="back-to-login">Voltar para o Login</a></p>
             </div>
         </div>
     </div>
 
     <div id="app-section" class="hidden">
-        <div class="container">
-            <header>
-                <h1>Meu Cofre</h1>
-                <p>Seu controle financeiro pessoal.</p>
-                <button id="btn-logout" class="logout-button">Sair</button>
-            </header>
-            
-            <section class="dashboard">
-                <div class="card receitas"><h3>Receitas Totais (Concluídas)</h3><p id="total-receitas">R$ 0,00</p></div>
-                <div class="card despesas"><h3>Despesas Totais (Concluídas)</h3><p id="total-despesas">R$ 0,00</p></div>
-                <div class="card saldo"><h3>Saldo Atual</h3><p id="saldo-atual">R$ 0,00</p></div>
-            </section>
-            
-            <section class="secao-graficos">
-                <div class="grafico-card"><h2>Despesas por Categoria</h2><div class="chart-container"><canvas id="graficoDespesas"></canvas></div></div>
-                <div class="grafico-card"><h2>Receitas por Categoria</h2><div class="chart-container"><canvas id="graficoReceitas"></canvas></div></div>
-            </section>
-
-            <section class="nova-transacao">
-                <h2>Nova Transação</h2>
-                <form id="form-transacao">
-                    <div class="form-group"><label for="tipo">Tipo</label><select id="tipo" required><option value="Receita">Receita</option><option value="Despesa">Despesa</option></select></div>
-                    <div class="form-group"><label for="categoria">Categoria</label><select id="categoria" required></select></div>
-                    <div class="form-group"><label for="subcategoria">Subcategoria (Opcional)</label><input type="text" id="subcategoria" placeholder="Ex: Faculdade, etc."></div>
-                    <div class="form-group"><label for="descricao">Descrição (Opcional)</label><input type="text" id="descricao" placeholder="Ex: Geladeira, etc."></div>
-                    <div class="form-group"><label for="valor">Valor (R$)</label><input type="number" id="valor" step="0.01" required></div>
-                    <div class="form-group"><label for="data">Data</label><input type="date" id="data" required></div>
-                    <div class="form-group"><label for="forma">Forma de Pagamento</label><select id="forma" required><option value="PIX">PIX</option><option value="Dinheiro">Dinheiro</option><option value="Transferência">Transferência</option><option value="Cartão de crédito">Cartão de crédito</option></select></div>
-                    <div class="form-group hidden" id="group-parcelas"><label for="parcelas">Nº de Parcelas</label><input type="number" id="parcelas" value="1" min="1"></div>
-                    <div class="form-group" id="group-cartao" style="display: none;"><label for="cartao">Cartão</label><select id="cartao"></select></div>
-                    <div class="form-group"><label for="status">Status</label><select id="status" required><option value="Concluído">Concluído</option><option value="Pendente">Pendente</option></select></div>
-                    <button type="submit" id="btn-submit">Adicionar Transação</button>
-                </form>
-            </section>
-
-            <section class="transacoes">
-                <h2>Histórico de Transações</h2>
-                <div class="transacoes-tabela">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Tipo</th><th>Descrição</th><th>Categoria</th><th>Subcategoria</th><th>Valor</th><th>Data</th><th>Pagamento</th><th>Cartão</th><th>Status</th><th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-transacoes"></tbody>
-                    </table>
-                </div>
-            </section>
         </div>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
