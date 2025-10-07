@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   init();
 });
-Peço desculpas, para evitar erros, aqui está o arquivo completo sem omissões. Por favor, substitua o seu por este.
+//Peço desculpas, para evitar erros, aqui está o arquivo completo sem omissões. Por favor, substitua o seu por este.
 
 JavaScript
 
