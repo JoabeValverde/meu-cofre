@@ -34,9 +34,7 @@ header {
     box-shadow: var(--shadow);
     position: relative;
 }
-h1 {
-    font-size: 2em;
-}
+h1 { font-size: 2em; }
 .dashboard {
     display: flex;
     flex-wrap: wrap;
@@ -65,7 +63,6 @@ h1 {
 .card.receitas p { color: var(--primary-color); }
 .card.despesas p { color: var(--secondary-color); }
 .card.saldo p { color: var(--accent-color); }
-
 .secao-graficos {
     display: flex;
     flex-wrap: wrap;
@@ -133,14 +130,6 @@ h1 {
     cursor: pointer;
     font-size: 1.1em;
     font-weight: bold;
-}
-.actions-filters {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-    gap: 10px;
 }
 .transacoes-tabela {
     background-color: var(--card-background);

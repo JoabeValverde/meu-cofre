@@ -1,7 +1,7 @@
 // ---- CONFIGURAÇÃO DO SUPABASE ----
-const SUPABASE_URL = "https://dqvsvzsmywoxtjgxvulj.supabase.co"; // Mantenha sua URL que já estava aqui
+const SUPABASE_URL = "https://dqvsvzsmywoxtjgxvulj.supabase.co";
 const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxdnN2enNteXdveHRqZ3h2dWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MTQ5NDYsImV4cCI6MjA3NTE5MDk0Nn0.tG1JqQTydWxfUbTJzYInCps6d8F-awQNjIPSP138iMo"; // Mantenha sua chave que já estava aqui
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxdnN2enNteXdveHRqZ3h2dWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MTQ5NDYsImV4cCI6MjA3NTE5MDk0Nn0.tG1JqQTydWxfUbTJzYInCps6d8F-awQNjIPSP138iMo";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ---------------------------------
@@ -10,7 +10,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const getElement = (id) => {
     const element = document.getElementById(id);
     if (!element) {
-      console.error(`ERRO: Elemento com ID '${id}' não foi encontrado.`);
+      console.error(
+        `ERRO: Elemento com ID '${id}' não foi encontrado no HTML.`
+      );
       return null;
     }
     return element;
@@ -49,38 +51,42 @@ document.addEventListener("DOMContentLoaded", () => {
   let transacoes = [];
   let config = { receitas: [], despesas: [], cartoes: [] };
   let idEmEdicao = null;
-  let meuGrafico = null;
+  let meuGraficoDespesas = null;
   let meuGraficoReceitas = null;
 
   // --- FUNÇÕES DE AUTENTICAÇÃO E CONFIGURAÇÃO ---
   const carregarConfiguracoesUsuario = async (user) => {
-    const { data: categoriasData, error: catError } = await supabaseClient
-      .from("categorias")
-      .select("nome, tipo")
-      .eq("user_id", user.id);
-    const { data: cartoesData, error: carError } = await supabaseClient
-      .from("cartoes")
-      .select("nome")
-      .eq("user_id", user.id);
-    if (catError || carError) {
-      console.error("Erro ao carregar configurações:", catError || carError);
-      return;
-    }
     const fallbackConfig = {
       receitas: ["Salário", "Freelance", "Vendas", "Outros"],
       despesas: ["Alimentação", "Transporte", "Moradia", "Lazer", "Outros"],
       cartoes: ["Cartão Padrão"],
     };
-    config.receitas = categoriasData
-      .filter((c) => c.tipo === "Receita")
-      .map((c) => c.nome);
-    config.despesas = categoriasData
-      .filter((c) => c.tipo === "Despesa")
-      .map((c) => c.nome);
-    config.cartoes = cartoesData.map((c) => c.nome);
-    if (config.receitas.length === 0) config.receitas = fallbackConfig.receitas;
-    if (config.despesas.length === 0) config.despesas = fallbackConfig.despesas;
-    if (config.cartoes.length === 0) config.cartoes = fallbackConfig.cartoes;
+    try {
+      const [catRes, carRes] = await Promise.all([
+        supabaseClient
+          .from("categorias")
+          .select("nome, tipo")
+          .eq("user_id", user.id),
+        supabaseClient.from("cartoes").select("nome").eq("user_id", user.id),
+      ]);
+      if (catRes.error) throw catRes.error;
+      if (carRes.error) throw carRes.error;
+      config.receitas = catRes.data
+        .filter((c) => c.tipo === "Receita")
+        .map((c) => c.nome);
+      config.despesas = catRes.data
+        .filter((c) => c.tipo === "Despesa")
+        .map((c) => c.nome);
+      config.cartoes = carRes.data.map((c) => c.nome);
+      if (config.receitas.length === 0)
+        config.receitas = fallbackConfig.receitas;
+      if (config.despesas.length === 0)
+        config.despesas = fallbackConfig.despesas;
+      if (config.cartoes.length === 0) config.cartoes = fallbackConfig.cartoes;
+    } catch (error) {
+      console.error("Erro ao carregar configurações:", error);
+      config = fallbackConfig;
+    }
   };
 
   const checkUserSession = async () => {
@@ -101,26 +107,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- FUNÇÕES DA APLICAÇÃO ---
   const carregarTransacoes = async (user) => {
     if (!user) return;
-    const { data, error } = await supabaseClient
-      .from("transacoes")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("data", { ascending: false });
-    if (error) {
-      console.error("Erro ao buscar transações:", error);
-    } else {
-      transacoes = data;
+    try {
+      const { data, error } = await supabaseClient
+        .from("transacoes")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("data", { ascending: false });
+      if (error) throw error;
+      transacoes = data || [];
       atualizarTudo();
+    } catch (error) {
+      console.error("Erro ao buscar transações:", error);
     }
   };
 
-  const formatarMoeda = (valor) => {
-    if (typeof valor !== "number") return "R$ 0,00";
-    return valor.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-  };
+  const formatarMoeda = (valor) =>
+    typeof valor !== "number"
+      ? "R$ 0,00"
+      : valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const atualizarDashboard = () => {
     const transacoesConcluidas = transacoes.filter(
@@ -153,12 +157,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }, {});
     const labels = Object.keys(dataMap);
     const dataValues = Object.values(dataMap);
-    if (meuGrafico) meuGrafico.destroy();
+    if (meuGraficoDespesas) meuGraficoDespesas.destroy();
     if (labels.length === 0) {
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       return;
     }
-    meuGrafico = new Chart(ctx, {
+    meuGraficoDespesas = new Chart(ctx, {
       type: "pie",
       data: {
         labels,
@@ -251,40 +255,28 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const popularSelects = () => {
-    console.log("LOG: Iniciando popularSelects.");
     const filtroCartao = getElement("filtro-cartao");
-    if (!tipoSelect || !categoriaSelect || !cartaoSelect) {
-      console.error(
-        "ERRO: Um dos elementos select principais (tipo, categoria ou cartao) não foi encontrado!"
-      );
-      return;
-    }
+    if (!tipoSelect || !categoriaSelect || !cartaoSelect) return;
     const tipoAtual = tipoSelect.value;
-    console.log("LOG: Tipo de transação atual:", tipoAtual);
     const categorias =
       tipoAtual === "Receita" ? config.receitas : config.despesas;
-    console.log("LOG: Lista de categorias a ser exibida:", categorias);
     categoriaSelect.innerHTML = "";
     categorias.forEach((cat) => {
-      console.log("LOG: Adicionando categoria:", cat);
-      const option = document.createElement("option");
-      option.value = cat;
-      option.textContent = cat;
-      categoriaSelect.appendChild(option);
+      const opt = document.createElement("option");
+      opt.value = cat;
+      opt.textContent = cat;
+      categoriaSelect.appendChild(opt);
     });
     cartaoSelect.innerHTML = '<option value="">Nenhum</option>';
     if (filtroCartao)
       filtroCartao.innerHTML = '<option value="Todos">Todos</option>';
-    console.log("LOG: Lista de cartões a ser exibida:", config.cartoes);
     config.cartoes.forEach((cartao) => {
-      console.log("LOG: Adicionando cartão:", cartao);
-      const optionForm = document.createElement("option");
-      optionForm.value = cartao;
-      optionForm.textContent = cartao;
-      cartaoSelect.appendChild(optionForm.cloneNode(true));
-      if (filtroCartao) filtroCartao.appendChild(optionForm);
+      const opt = document.createElement("option");
+      opt.value = cartao;
+      opt.textContent = cartao;
+      cartaoSelect.appendChild(opt.cloneNode(true));
+      if (filtroCartao) filtroCartao.appendChild(opt);
     });
-    console.log("LOG: popularSelects concluído.");
   };
 
   window.prepararEdicao = (id) => {
@@ -316,7 +308,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.deletarTransacao = async (id) => {
-    if (confirm("Tem certeza que deseja deletar esta transação?")) {
+    if (confirm("Tem certeza que deseja deletar?")) {
       const {
         data: { user },
       } = await supabaseClient.auth.getUser();
@@ -355,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const pass = getElement("signup-password").value;
       if (pass.length < 6) {
-        alert("A senha deve ter no mínimo 6 caracteres.");
+        alert("Senha curta.");
         return;
       }
       const { error } = await supabaseClient.auth.signUp({
@@ -387,91 +379,100 @@ document.addEventListener("DOMContentLoaded", () => {
       signupView.classList.add("hidden");
       loginView.classList.remove("hidden");
     });
-  if (form)
+
+  if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const {
         data: { user },
       } = await supabaseClient.auth.getUser();
-      if (!user) return;
-      const valorTotal = parseFloat(valorInput.value);
-      const numeroParcelas = parseInt(parcelasInput.value, 10);
-      const formaPagamento = formaPagamentoSelect.value;
-      const descricao = descricaoInput.value.trim();
-      let error = null;
-      if (formaPagamento === "Cartão de crédito" && numeroParcelas > 1) {
-        const transacoesParaSalvar = [];
-        const valorParcela = parseFloat(
-          (valorTotal / numeroParcelas).toFixed(2)
-        );
-        const dataInicial = new Date(dataInput.value + "T03:00:00");
-        const grupoParcelaUUID = crypto.randomUUID();
-        let somaParcelas = 0;
-        for (let i = 0; i < numeroParcelas; i++) {
-          const dataParcela = new Date(dataInicial);
-          dataParcela.setMonth(dataInicial.getMonth() + i);
-          let valorDaParcelaAtual = valorParcela;
-          somaParcelas += valorParcela;
-          if (i === numeroParcelas - 1) {
-            valorDaParcelaAtual += valorTotal - somaParcelas;
-            valorDaParcelaAtual = parseFloat(valorDaParcelaAtual.toFixed(2));
+      if (!user) {
+        alert("Você precisa estar logado.");
+        return;
+      }
+
+      try {
+        const valorTotal = parseFloat(valorInput.value);
+        const numeroParcelas = parseInt(parcelasInput.value, 10);
+        const formaPagamento = formaPagamentoSelect.value;
+        const descricao = descricaoInput.value.trim();
+
+        if (formaPagamento === "Cartão de crédito" && numeroParcelas > 1) {
+          const transacoesParaSalvar = [];
+          const valorParcela = parseFloat(
+            (valorTotal / numeroParcelas).toFixed(2)
+          );
+          const dataInicial = new Date(dataInput.value + "T03:00:00");
+          const grupoParcelaUUID = crypto.randomUUID();
+          let somaParcelas = 0;
+
+          for (let i = 0; i < numeroParcelas; i++) {
+            const dataParcela = new Date(dataInicial);
+            dataParcela.setMonth(dataInicial.getMonth() + i);
+            let valorDaParcelaAtual = valorParcela;
+            somaParcelas += valorParcela;
+            if (i === numeroParcelas - 1) {
+              valorDaParcelaAtual += valorTotal - somaParcelas;
+            }
+            transacoesParaSalvar.push({
+              tipo: "Despesa",
+              categoria: categoriaSelect.value,
+              subcategoria: subcategoriaInput.value.trim(),
+              descricao: `${descricao || "Parcelado"} (${
+                i + 1
+              }/${numeroParcelas})`,
+              valor: parseFloat(valorDaParcelaAtual.toFixed(2)),
+              data: dataParcela.toISOString().split("T")[0],
+              forma: formaPagamento,
+              status: "Pendente",
+              cartao: cartaoSelect.value,
+              user_id: user.id,
+              grupo_parcela: grupoParcelaUUID,
+            });
           }
-          transacoesParaSalvar.push({
-            tipo: "Despesa",
+          const { error } = await supabaseClient
+            .from("transacoes")
+            .insert(transacoesParaSalvar)
+            .select();
+          if (error) throw error;
+        } else {
+          const dadosDaTransacao = {
+            tipo: tipoSelect.value,
             categoria: categoriaSelect.value,
             subcategoria: subcategoriaInput.value.trim(),
-            descricao: `${descricao || "Parcelado"} (${
-              i + 1
-            }/${numeroParcelas})`,
-            valor: valorDaParcelaAtual,
-            data: dataParcela.toISOString().split("T")[0],
+            descricao: descricao,
+            valor: valorTotal,
+            data: dataInput.value,
             forma: formaPagamento,
-            status: "Pendente",
-            cartao: cartaoSelect.value,
+            status: statusSelect.value,
+            cartao:
+              formaPagamento === "Cartão de crédito"
+                ? cartaoSelect.value
+                : null,
             user_id: user.id,
-            grupo_parcela: grupoParcelaUUID,
-          });
+          };
+          const { error } =
+            idEmEdicao !== null
+              ? await supabaseClient
+                  .from("transacoes")
+                  .update(dadosDaTransacao)
+                  .eq("id", idEmEdicao)
+                  .select()
+              : await supabaseClient
+                  .from("transacoes")
+                  .insert([dadosDaTransacao])
+                  .select();
+          if (error) throw error;
         }
-        const { error: insertError } = await supabaseClient
-          .from("transacoes")
-          .insert(transacoesParaSalvar)
-          .select();
-        error = insertError;
-      } else {
-        const dadosDaTransacao = {
-          tipo: tipoSelect.value,
-          categoria: categoriaSelect.value,
-          subcategoria: subcategoriaInput.value.trim(),
-          descricao: descricao,
-          valor: valorTotal,
-          data: dataInput.value,
-          forma: formaPagamento,
-          status: statusSelect.value,
-          cartao:
-            formaPagamento === "Cartão de crédito" ? cartaoSelect.value : null,
-          user_id: user.id,
-        };
-        const { error: dbError } =
-          idEmEdicao !== null
-            ? await supabaseClient
-                .from("transacoes")
-                .update(dadosDaTransacao)
-                .eq("id", idEmEdicao)
-                .select()
-            : await supabaseClient
-                .from("transacoes")
-                .insert([dadosDaTransacao])
-                .select();
-        error = dbError;
-      }
-      if (error) {
-        console.error("Erro detalhado do Supabase:", error);
-        alert("Não foi possível salvar a transação.");
-      } else {
         await carregarTransacoes(user);
         cancelarEdicao();
+      } catch (error) {
+        console.error("Erro detalhado do Supabase:", error);
+        alert("Não foi possível salvar a transação.");
       }
     });
+  }
+
   if (tipoSelect) tipoSelect.addEventListener("change", popularSelects);
   if (formaPagamentoSelect) {
     formaPagamentoSelect.addEventListener("change", () => {
@@ -481,6 +482,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // --- INICIALIZAÇÃO ---
   supabaseClient.auth.onAuthStateChange((_event, session) =>
     checkUserSession()
   );
