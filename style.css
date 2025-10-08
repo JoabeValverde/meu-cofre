@@ -162,9 +162,7 @@ table th {
 }
 .action-button.edit-button { color: var(--accent-color); }
 .action-button:not(.edit-button) { color: var(--secondary-color); }
-
 .hidden { display: none !important; }
-
 #auth-section {
     display: flex;
     justify-content: center;
@@ -207,10 +205,7 @@ table th {
     background-color: var(--header-text);
     color: var(--header-bg);
 }
-
 @media (max-width: 768px) {
     body { padding: 10px; }
     .dashboard, .secao-graficos, .actions-filters { flex-direction: column; }
 }
-
-

@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const atualizarGraficoDespesas = () => {
     const canvas = getElement("graficoDespesas");
-    if (!canvas) return;
+    if (!canvas || !transacoes) return;
     const ctx = canvas.getContext("2d");
     const dados = transacoes.filter(
       (t) => t.tipo === "Despesa" && t.status === "Concluído"
@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const atualizarGraficoReceitas = () => {
     const canvas = getElement("graficoReceitas");
-    if (!canvas) return;
+    if (!canvas || !transacoes) return;
     const ctx = canvas.getContext("2d");
     const dados = transacoes.filter(
       (t) => t.tipo === "Receita" && t.status === "Concluído"
@@ -260,7 +260,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const popularSelects = () => {
-    const filtroCartao = getElement("filtro-cartao");
     if (!tipoSelect || !categoriaSelect || !cartaoSelect) return;
     const tipoAtual = tipoSelect.value;
     const categorias =
@@ -272,6 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
       opt.textContent = cat;
       categoriaSelect.appendChild(opt);
     });
+    const filtroCartao = getElement("filtro-cartao");
     cartaoSelect.innerHTML = '<option value="">Nenhum</option>';
     if (filtroCartao)
       filtroCartao.innerHTML = '<option value="Todos">Todos</option>';
@@ -361,7 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
         password: pass,
       });
       if (error) {
-        alert("Erro ao criar conta: " + error.message);
+        alert("Erro: " + error.message);
       } else {
         alert("Conta criada! Verifique seu email.");
         signupView.classList.add("hidden");
@@ -382,6 +382,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (showLogin)
     showLogin.addEventListener("click", (e) => {
       e.preventDefault();
+      resetPasswordView.classList.add("hidden");
+      forgotPasswordView.classList.add("hidden");
       signupView.classList.add("hidden");
       loginView.classList.remove("hidden");
     });
@@ -390,12 +392,12 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       loginView.classList.add("hidden");
       signupView.classList.add("hidden");
-      resetPasswordView.classList.remove("hidden");
+      forgotPasswordView.classList.remove("hidden");
     });
   if (backToLogin)
     backToLogin.addEventListener("click", (e) => {
       e.preventDefault();
-      resetPasswordView.classList.add("hidden");
+      forgotPasswordView.classList.add("hidden");
       loginView.classList.remove("hidden");
     });
 
@@ -410,7 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Erro ao enviar email: " + error.message);
       } else {
         alert("Email de recuperação enviado! Verifique sua caixa de entrada.");
-        resetPasswordView.classList.add("hidden");
+        forgotPasswordView.classList.add("hidden");
         loginView.classList.remove("hidden");
       }
     });
