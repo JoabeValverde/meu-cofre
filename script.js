@@ -274,6 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
       opt.textContent = cat;
       categoriaSelect.appendChild(opt);
     });
+    const filtroCartao = getElement("filtro-cartao");
     cartaoSelect.innerHTML = '<option value="">Nenhum</option>';
     if (filtroCartao)
       filtroCartao.innerHTML = '<option value="Todos">Todos</option>';
@@ -363,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
         password: pass,
       });
       if (error) {
-        alert("Erro: " + error.message);
+        alert("Erro ao criar conta: " + error.message);
       } else {
         alert("Conta criada! Verifique seu email.");
         signupView.classList.add("hidden");
@@ -387,6 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       signupView.classList.add("hidden");
       forgotPasswordView.classList.add("hidden");
+      resetPasswordView.classList.add("hidden");
       loginView.classList.remove("hidden");
     });
   if (showForgotPassword)

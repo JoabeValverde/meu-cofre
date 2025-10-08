@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head></head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Cofre</title>
@@ -82,6 +82,12 @@
             </section>
             <section class="transacoes">
                 <h2>Histórico de Transações</h2>
+                <div class="actions-filters">
+                    <div class="filter-group">
+                        <label for="filtro-tipo">Filtrar por tipo:</label><select id="filtro-tipo"><option value="Todos">Todos</option><option value="Receita">Receita</option><option value="Despesa">Despesa</option></select>
+                        <label for="filtro-cartao">Filtrar por cartão:</label><select id="filtro-cartao"><option value="Todos">Todos</option></select>
+                    </div>
+                </div>
                 <div class="transacoes-tabela">
                     <table>
                         <thead>
@@ -101,4 +107,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
