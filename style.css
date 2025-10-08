@@ -207,5 +207,5 @@ table th {
 }
 @media (max-width: 768px) {
     body { padding: 10px; }
-    .dashboard, .secao-graficos, .actions-filters { flex-direction: column; }
+    .dashboard, .secao-graficos { flex-direction: column; }
 }

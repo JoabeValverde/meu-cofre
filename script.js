@@ -51,6 +51,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const showForgotPassword = getElement("show-forgot-password");
   const backToLogin = getElement("back-to-login");
   const forgotEmailInput = getElement("forgot-email");
+  const filtroTipo = getElement("filtro-tipo");
+  const filtroCartao = getElement("filtro-cartao");
 
   // --- ESTADO DA APLICAÇÃO ---
   let transacoes = [];
@@ -72,6 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loginView.classList.remove("hidden");
       signupView.classList.add("hidden");
       resetPasswordView.classList.add("hidden");
+      forgotPasswordView.classList.add("hidden");
     }
   };
 
@@ -271,7 +274,6 @@ document.addEventListener("DOMContentLoaded", () => {
       opt.textContent = cat;
       categoriaSelect.appendChild(opt);
     });
-    const filtroCartao = getElement("filtro-cartao");
     cartaoSelect.innerHTML = '<option value="">Nenhum</option>';
     if (filtroCartao)
       filtroCartao.innerHTML = '<option value="Todos">Todos</option>';
@@ -378,13 +380,13 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       loginView.classList.add("hidden");
       signupView.classList.remove("hidden");
+      forgotPasswordView.classList.add("hidden");
     });
   if (showLogin)
     showLogin.addEventListener("click", (e) => {
       e.preventDefault();
-      resetPasswordView.classList.add("hidden");
-      forgotPasswordView.classList.add("hidden");
       signupView.classList.add("hidden");
+      forgotPasswordView.classList.add("hidden");
       loginView.classList.remove("hidden");
     });
   if (showForgotPassword)
