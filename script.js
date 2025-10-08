@@ -16,18 +16,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupView = getElement("signup-view");
   const forgotPasswordView = getElement("forgot-password-view");
   const resetPasswordView = getElement("reset-password-view");
-
   const loginForm = getElement("login-form");
   const signupForm = getElement("signup-form");
   const forgotPasswordForm = getElement("forgot-password-form");
   const resetPasswordForm = getElement("reset-password-form");
-
   const showSignup = getElement("show-signup");
   const showLogin = getElement("show-login");
   const showForgotPassword = getElement("show-forgot-password");
   const backToLogin = getElement("back-to-login");
   const btnLogout = getElement("btn-logout");
-
   const form = getElement("form-transacao");
   const tipoSelect = getElement("tipo");
   const categoriaSelect = getElement("categoria");
@@ -45,6 +42,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const totalReceitasEl = getElement("total-receitas");
   const totalDespesasEl = getElement("total-despesas");
   const saldoAtualEl = getElement("saldo-atual");
+  const filtroTipo = getElement("filtro-tipo");
+  const filtroCartao = getElement("filtro-cartao");
 
   // --- ESTADO DA APLICAÇÃO ---
   let transacoes = [];
@@ -89,9 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ]);
       if (catRes.error) throw catRes.error;
       if (carRes.error) throw carRes.error;
-      config.receitas = catRes.data
-        .filter((c) => c.tipo === "Receita")
-        .map((c) => c.nome);
+      config.receitas = catRes.data.map((c) => c.nome);
       config.despesas = catRes.data
         .filter((c) => c.tipo === "Despesa")
         .map((c) => c.nome);
@@ -297,15 +294,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (transacao.cartao) cartaoSelect.value = transacao.cartao;
     statusSelect.value = transacao.status;
     idEmEdicao = id;
-    getElement("btn-submit").textContent = "Salvar Alterações";
+    btnSubmit.textContent = "Salvar Alterações";
     form.scrollIntoView({ behavior: "smooth" });
   };
 
   const cancelarEdicao = () => {
     idEmEdicao = null;
     form.reset();
-    if (dataInput) dataInput.valueAsDate = new Date();
-    getElement("btn-submit").textContent = "Adicionar Transação";
+    dataInput.valueAsDate = new Date();
+    btnSubmit.textContent = "Adicionar Transação";
     formaPagamentoSelect.dispatchEvent(new Event("change"));
     tipoSelect.dispatchEvent(new Event("change"));
   };
