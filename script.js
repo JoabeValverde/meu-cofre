@@ -7,18 +7,27 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ---------------------------------
 
 document.addEventListener("DOMContentLoaded", () => {
-  const getElement = (id) => {
-    const element = document.getElementById(id);
-    if (!element) {
-      console.error(
-        `ERRO: Elemento com ID '${id}' não foi encontrado no HTML.`
-      );
-      return null;
-    }
-    return element;
-  };
+  const getElement = (id) => document.getElementById(id);
 
   // --- SELEÇÃO DE ELEMENTOS DO DOM ---
+  const authSection = getElement("auth-section");
+  const appSection = getElement("app-section");
+  const loginView = getElement("login-view");
+  const signupView = getElement("signup-view");
+  const forgotPasswordView = getElement("forgot-password-view");
+  const resetPasswordView = getElement("reset-password-view");
+
+  const loginForm = getElement("login-form");
+  const signupForm = getElement("signup-form");
+  const forgotPasswordForm = getElement("forgot-password-form");
+  const resetPasswordForm = getElement("reset-password-form");
+
+  const showSignup = getElement("show-signup");
+  const showLogin = getElement("show-login");
+  const showForgotPassword = getElement("show-forgot-password");
+  const backToLogin = getElement("back-to-login");
+  const btnLogout = getElement("btn-logout");
+
   const form = getElement("form-transacao");
   const tipoSelect = getElement("tipo");
   const categoriaSelect = getElement("categoria");
@@ -33,26 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const cartaoSelect = getElement("cartao");
   const statusSelect = getElement("status");
   const listaTransacoes = getElement("lista-transacoes");
-  const btnSubmit = getElement("btn-submit");
   const totalReceitasEl = getElement("total-receitas");
   const totalDespesasEl = getElement("total-despesas");
   const saldoAtualEl = getElement("saldo-atual");
-  const authSection = getElement("auth-section");
-  const appSection = getElement("app-section");
-  const loginView = getElement("login-view");
-  const signupView = getElement("signup-view");
-  const loginForm = getElement("login-form");
-  const signupForm = getElement("signup-form");
-  const showSignup = getElement("show-signup");
-  const showLogin = getElement("show-login");
-  const btnLogout = getElement("btn-logout");
-  const resetPasswordView = getElement("reset-password-view");
-  const resetPasswordForm = getElement("reset-password-form");
-  const showForgotPassword = getElement("show-forgot-password");
-  const backToLogin = getElement("back-to-login");
-  const forgotEmailInput = getElement("forgot-email");
-  const filtroTipo = getElement("filtro-tipo");
-  const filtroCartao = getElement("filtro-cartao");
 
   // --- ESTADO DA APLICAÇÃO ---
   let transacoes = [];
@@ -62,20 +54,23 @@ document.addEventListener("DOMContentLoaded", () => {
   let meuGraficoReceitas = null;
 
   // --- FUNÇÕES ---
-  const checkUserSession = async (session) => {
-    if (session) {
-      authSection.classList.add("hidden");
-      appSection.classList.remove("hidden");
-      await carregarConfiguracoesUsuario(session.user);
-      await carregarTransacoes(session.user);
-    } else {
-      appSection.classList.add("hidden");
-      authSection.classList.remove("hidden");
-      loginView.classList.remove("hidden");
-      signupView.classList.add("hidden");
-      resetPasswordView.classList.add("hidden");
-      forgotPasswordView.classList.add("hidden");
-    }
+  const showScreen = (screenToShow) => {
+    [loginView, signupView, forgotPasswordView, resetPasswordView].forEach(
+      (screen) => {
+        if (screen) screen.classList.add("hidden");
+      }
+    );
+    if (screenToShow) screenToShow.classList.remove("hidden");
+  };
+
+  const showApp = (show) => {
+    authSection.classList.toggle("hidden", show);
+    appSection.classList.toggle("hidden", !show);
+  };
+
+  const carregarTudo = async (user) => {
+    await carregarConfiguracoesUsuario(user);
+    await carregarTransacoes(user);
   };
 
   const carregarConfiguracoesUsuario = async (user) => {
@@ -134,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
       : valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const atualizarDashboard = () => {
-    if (!transacoes) return;
+    if (!transacoes || !totalReceitasEl) return;
     const transacoesConcluidas = transacoes.filter(
       (t) => t.status === "Concluído"
     );
@@ -302,15 +297,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (transacao.cartao) cartaoSelect.value = transacao.cartao;
     statusSelect.value = transacao.status;
     idEmEdicao = id;
-    btnSubmit.textContent = "Salvar Alterações";
+    getElement("btn-submit").textContent = "Salvar Alterações";
     form.scrollIntoView({ behavior: "smooth" });
   };
 
   const cancelarEdicao = () => {
     idEmEdicao = null;
     form.reset();
-    dataInput.valueAsDate = new Date();
-    btnSubmit.textContent = "Adicionar Transação";
+    if (dataInput) dataInput.valueAsDate = new Date();
+    getElement("btn-submit").textContent = "Adicionar Transação";
     formaPagamentoSelect.dispatchEvent(new Event("change"));
     tipoSelect.dispatchEvent(new Event("change"));
   };
@@ -356,19 +351,17 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const pass = getElement("signup-password").value;
       if (pass.length < 6) {
-        alert("A senha deve ter no mínimo 6 caracteres.");
-        return;
+        return alert("A senha deve ter no mínimo 6 caracteres.");
       }
       const { error } = await supabaseClient.auth.signUp({
         email: getElement("signup-email").value,
         password: pass,
       });
       if (error) {
-        alert("Erro ao criar conta: " + error.message);
+        alert("Erro: " + error.message);
       } else {
-        alert("Conta criada! Verifique seu email.");
-        signupView.classList.add("hidden");
-        loginView.classList.remove("hidden");
+        alert("Conta criada! Verifique seu email para confirmar.");
+        showScreen(loginView);
       }
     });
   if (btnLogout)
@@ -379,36 +372,28 @@ document.addEventListener("DOMContentLoaded", () => {
   if (showSignup)
     showSignup.addEventListener("click", (e) => {
       e.preventDefault();
-      loginView.classList.add("hidden");
-      signupView.classList.remove("hidden");
-      forgotPasswordView.classList.add("hidden");
+      showScreen(signupView);
     });
   if (showLogin)
     showLogin.addEventListener("click", (e) => {
       e.preventDefault();
-      signupView.classList.add("hidden");
-      forgotPasswordView.classList.add("hidden");
-      resetPasswordView.classList.add("hidden");
-      loginView.classList.remove("hidden");
+      showScreen(loginView);
     });
   if (showForgotPassword)
     showForgotPassword.addEventListener("click", (e) => {
       e.preventDefault();
-      loginView.classList.add("hidden");
-      signupView.classList.add("hidden");
-      forgotPasswordView.classList.remove("hidden");
+      showScreen(forgotPasswordView);
     });
   if (backToLogin)
     backToLogin.addEventListener("click", (e) => {
       e.preventDefault();
-      forgotPasswordView.classList.add("hidden");
-      loginView.classList.remove("hidden");
+      showScreen(loginView);
     });
 
   if (forgotPasswordForm) {
     forgotPasswordForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = forgotEmailInput.value;
+      const email = getElement("forgot-email").value;
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.href.split("#")[0],
       });
@@ -416,8 +401,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Erro ao enviar email: " + error.message);
       } else {
         alert("Email de recuperação enviado! Verifique sua caixa de entrada.");
-        forgotPasswordView.classList.add("hidden");
-        loginView.classList.remove("hidden");
+        showScreen(loginView);
       }
     });
   }
@@ -427,8 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const newPassword = getElement("new-password").value;
       if (newPassword.length < 6) {
-        alert("A nova senha deve ter no mínimo 6 caracteres.");
-        return;
+        return alert("A nova senha deve ter no mínimo 6 caracteres.");
       }
       const { error } = await supabaseClient.auth.updateUser({
         password: newPassword,
@@ -440,8 +423,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "Senha atualizada com sucesso! Por favor, faça o login com sua nova senha."
         );
         location.hash = "";
-        resetPasswordView.classList.add("hidden");
-        loginView.classList.remove("hidden");
+        showScreen(loginView);
       }
     });
   }
@@ -548,18 +530,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- INICIALIZAÇÃO ---
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === "PASSWORD_RECOVERY") {
-      authSection.classList.remove("hidden");
-      appSection.classList.add("hidden");
-      loginView.classList.add("hidden");
-      signupView.classList.add("hidden");
-      resetPasswordView.classList.remove("hidden");
+      showApp(false);
+      showScreen(resetPasswordView);
     } else {
       checkUserSession(session);
     }
   });
-
-  const init = () => {
-    if (dataInput) dataInput.valueAsDate = new Date();
-  };
-  init();
 });
