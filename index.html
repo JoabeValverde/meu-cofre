@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Cofre</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div id="auth-section">
@@ -40,8 +41,8 @@
                 <button id="btn-logout" class="logout-button">Sair</button>
             </header>
             <section class="dashboard">
-                <div class="card receitas"><h3>Receitas Totais (Concluídas)</h3><p id="total-receitas">R$ 0,00</p></div>
-                <div class="card despesas"><h3>Despesas Totais (Concluídas)</h3><p id="total-despesas">R$ 0,00</p></div>
+                <div class="card receitas"><h3>Receitas Totais</h3><p id="total-receitas">R$ 0,00</p></div>
+                <div class="card despesas"><h3>Despesas Totais</h3><p id="total-despesas">R$ 0,00</p></div>
                 <div class="card saldo"><h3>Saldo Atual</h3><p id="saldo-atual">R$ 0,00</p></div>
             </section>
             <section class="secao-graficos">
@@ -53,13 +54,13 @@
                 <form id="form-transacao">
                     <div class="form-group"><label for="tipo">Tipo</label><select id="tipo" required><option value="Receita">Receita</option><option value="Despesa">Despesa</option></select></div>
                     <div class="form-group"><label for="categoria">Categoria</label><select id="categoria" required></select></div>
-                    <div class="form-group"><label for="subcategoria">Subcategoria (Opcional)</label><input type="text" id="subcategoria" placeholder="Ex: Faculdade, etc."></div>
-                    <div class="form-group"><label for="descricao">Descrição (Opcional)</label><input type="text" id="descricao" placeholder="Ex: Geladeira, etc."></div>
+                    <div class="form-group"><label for="subcategoria">Subcategoria</label><input type="text" id="subcategoria"></div>
+                    <div class="form-group"><label for="descricao">Descrição</label><input type="text" id="descricao"></div>
                     <div class="form-group"><label for="valor">Valor (R$)</label><input type="number" id="valor" step="0.01" required></div>
                     <div class="form-group"><label for="data">Data</label><input type="date" id="data" required></div>
                     <div class="form-group"><label for="forma">Forma de Pagamento</label><select id="forma" required><option value="PIX">PIX</option><option value="Dinheiro">Dinheiro</option><option value="Transferência">Transferência</option><option value="Cartão de crédito">Cartão de crédito</option></select></div>
                     <div class="form-group hidden" id="group-parcelas"><label for="parcelas">Nº de Parcelas</label><input type="number" id="parcelas" value="1" min="1"></div>
-                    <div class="form-group" id="group-cartao" style="display: none;"><label for="cartao">Cartão</label><select id="cartao"></select></div>
+                    <div class="form-group" style="display: none;" id="group-cartao"><label for="cartao">Cartão</label><select id="cartao"></select></div>
                     <div class="form-group"><label for="status">Status</label><select id="status" required><option value="Concluído">Concluído</option><option value="Pendente">Pendente</option></select></div>
                     <button type="submit" id="btn-submit">Adicionar Transação</button>
                 </form>
@@ -80,7 +81,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>
