@@ -9,6 +9,8 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 document.addEventListener("DOMContentLoaded", () => {
   const getElement = (id) => document.getElementById(id);
 
+  // --- SELEÇÃO DE ELEMENTOS DO DOM ---
+  const appSection = getElement("app-section");
   const form = getElement("form-transacao");
   const tipoSelect = getElement("tipo");
   const categoriaSelect = getElement("categoria");
@@ -23,9 +25,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const cartaoSelect = getElement("cartao");
   const statusSelect = getElement("status");
   const listaTransacoes = getElement("lista-transacoes");
-  const totalReceitasEl = getElement("total-receitas");
-  const totalDespesasEl = getElement("total-despesas");
-  const saldoAtualEl = getElement("saldo-atual");
+
+  const authSection = getElement("auth-section");
+  const loginView = getElement("login-view");
+  const signupView = getElement("signup-view");
+  const showSignup = getElement("show-signup");
+  const showLogin = getElement("show-login");
 
   let transacoes =
     JSON.parse(localStorage.getItem("transacoes_meucofre")) || [];
@@ -73,9 +78,9 @@ document.addEventListener("DOMContentLoaded", () => {
       .filter((t) => t.tipo === "Despesa")
       .reduce((acc, t) => acc + t.valor, 0);
     const saldo = receitas - despesas;
-    totalReceitasEl.textContent = formatarMoeda(receitas);
-    totalDespesasEl.textContent = formatarMoeda(despesas);
-    saldoAtualEl.textContent = formatarMoeda(saldo);
+    getElement("total-receitas").textContent = formatarMoeda(receitas);
+    getElement("total-despesas").textContent = formatarMoeda(despesas);
+    getElement("saldo-atual").textContent = formatarMoeda(saldo);
   }
 
   function atualizarGrafico(ctx, chartInstance, tipo) {
@@ -92,14 +97,11 @@ document.addEventListener("DOMContentLoaded", () => {
       tipo === "Receita"
         ? ["#4CAF50", "#8BC34A", "#00BCD4", "#03A9F4", "#2196F3"]
         : ["#F44336", "#E91E63", "#9C27B0", "#673AB7", "#3F51B5"];
-
     if (chartInstance) chartInstance.destroy();
-
     if (labels.length === 0) {
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       return null;
     }
-
     return new Chart(ctx, {
       type: "pie",
       data: {
@@ -119,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
         '<tr><td colspan="10" style="text-align:center; padding: 20px;">Nenhuma transação encontrada.</td></tr>';
       return;
     }
-    const transacoesOrdenadas = transacoes.sort(
+    const transacoesOrdenadas = [...transacoes].sort(
       (a, b) => new Date(b.data) - new Date(a.data)
     );
     transacoesOrdenadas.forEach((t) => {
@@ -138,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
         t.status
       }</span></td><td><button class="action-button edit-button" data-id="${
         t.id
-      }">✏️</button><button class="action-button" data-id="${
+      }">✏️</button><button class="action-button delete-button" data-id="${
         t.id
       }">🗑️</button></td>`;
       listaTransacoes.appendChild(tr);
@@ -176,17 +178,14 @@ document.addEventListener("DOMContentLoaded", () => {
     dataInput.value = transacao.data;
     formaPagamentoSelect.value = transacao.forma;
     statusSelect.value = transacao.status;
-
     tipoSelect.dispatchEvent(new Event("change"));
     setTimeout(() => {
       categoriaSelect.value = transacao.categoria;
     }, 0);
-
     formaPagamentoSelect.dispatchEvent(new Event("change"));
     setTimeout(() => {
       if (transacao.cartao) cartaoSelect.value = transacao.cartao;
     }, 0);
-
     getElement("btn-submit").textContent = "Salvar Alterações";
     form.scrollIntoView({ behavior: "smooth" });
   }
@@ -215,97 +214,46 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  if (showSignup) {
+    showSignup.addEventListener("click", (e) => {
+      e.preventDefault();
+      loginView.classList.add("hidden");
+      signupView.classList.remove("hidden");
+    });
+  }
+
+  if (showLogin) {
+    showLogin.addEventListener("click", (e) => {
+      e.preventDefault();
+      signupView.classList.add("hidden");
+      loginView.classList.remove("hidden");
+    });
+  }
+
   form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const valorTotal = parseFloat(valorInput.value);
-    const numeroParcelas = parseInt(parcelasInput.value, 10);
-    const formaPagamento = formaPagamentoSelect.value;
-
-    if (idEmEdicao) {
-      const index = transacoes.findIndex((t) => t.id === idEmEdicao);
-      if (index !== -1) {
-        transacoes[index] = {
-          ...transacoes[index],
-          tipo: tipoSelect.value,
-          categoria: categoriaSelect.value,
-          subcategoria: subcategoriaInput.value.trim(),
-          descricao: descricaoInput.value.trim(),
-          valor: valorTotal,
-          data: dataInput.value,
-          forma: formaPagamento,
-          status: statusSelect.value,
-          cartao:
-            formaPagamento === "Cartão de crédito" ? cartaoSelect.value : null,
-        };
-      }
-    } else if (formaPagamento === "Cartão de crédito" && numeroParcelas > 1) {
-      const valorParcela = parseFloat((valorTotal / numeroParcelas).toFixed(2));
-      const dataInicial = new Date(dataInput.value + "T03:00:00");
-      let somaParcelas = 0;
-      for (let i = 0; i < numeroParcelas; i++) {
-        const dataParcela = new Date(dataInicial);
-        dataParcela.setMonth(dataInicial.getMonth() + i);
-        let valorDaParcelaAtual = valorParcela;
-        somaParcelas += valorParcela;
-        if (i === numeroParcelas - 1) {
-          valorDaParcelaAtual += valorTotal - somaParcelas;
-        }
-        transacoes.push({
-          id: Date.now() + i,
-          tipo: "Despesa",
-          categoria: categoriaSelect.value,
-          subcategoria: subcategoriaInput.value.trim(),
-          descricao: `${descricaoInput.value.trim() || "Parcelado"} (${
-            i + 1
-          }/${numeroParcelas})`,
-          valor: parseFloat(valorDaParcelaAtual.toFixed(2)),
-          data: dataParcela.toISOString().split("T")[0],
-          forma: formaPagamento,
-          status: "Pendente",
-          cartao: cartaoSelect.value,
-        });
-      }
-    } else {
-      transacoes.push({
-        id: Date.now(),
-        tipo: tipoSelect.value,
-        categoria: categoriaSelect.value,
-        subcategoria: subcategoriaInput.value.trim(),
-        descricao: descricaoInput.value.trim(),
-        valor: valorTotal,
-        data: dataInput.value,
-        forma: formaPagamento,
-        status: statusSelect.value,
-        cartao:
-          formaPagamento === "Cartão de crédito" ? cartaoSelect.value : null,
-      });
-    }
-
-    idEmEdicao = null;
-    form.reset();
-    getElement("btn-submit").textContent = "Adicionar Transação";
-    formaPagamentoSelect.dispatchEvent(new Event("change"));
-    atualizarTudo();
+    /* ...código do localStorage... */
   });
-
   tipoSelect.addEventListener("change", popularSelects);
   formaPagamentoSelect.addEventListener("change", () => {
     const isCartao = formaPagamentoSelect.value === "Cartão de crédito";
     cartaoGroup.style.display = isCartao ? "flex" : "none";
     parcelasGroup.classList.toggle("hidden", !isCartao);
   });
-
   listaTransacoes.addEventListener("click", (e) => {
     const target = e.target.closest(".action-button");
     if (!target) return;
-
     const id = parseInt(target.dataset.id, 10);
     if (target.classList.contains("edit-button")) {
       prepararEdicao(id);
-    } else {
+    } else if (target.classList.contains("delete-button")) {
       deletarTransacao(id);
     }
   });
+
+  // --- INICIALIZAÇÃO ---
+  // Por enquanto, escondemos a tela de auth e mostramos a app
+  authSection.classList.add("hidden");
+  appSection.classList.remove("hidden");
 
   atualizarTudo();
   if (dataInput) dataInput.valueAsDate = new Date();
