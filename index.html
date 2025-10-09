@@ -9,29 +9,46 @@
 </head>
 <body>
     <div id="auth-section">
-        <div class="auth-container">
-            <div id="login-view">
-                <img src="https://i.imgur.com/iC32a22.png" alt="Logo Meu Cofre" class="auth-logo">
-                <h2>Acessar Meu Cofre</h2>
-                <form id="login-form">
-                    <div class="form-group"><label for="login-email">Email</label><input type="email" id="login-email" placeholder="seu@email.com" required></div>
-                    <div class="form-group"><label for="login-password">Senha</label><input type="password" id="login-password" required></div>
-                    <button type="submit" class="auth-button">Entrar</button>
-                </form>
-                <p class="auth-toggle">Não tem uma conta? <a href="#" id="show-signup">Cadastre-se</a></p>
-            </div>
-            <div id="signup-view" class="hidden">
-                <img src="https://i.imgur.com/iC32a22.png" alt="Logo Meu Cofre" class="auth-logo">
-                <h2>Criar Conta</h2>
-                <form id="signup-form">
-                    <div class="form-group"><label for="signup-email">Email</label><input type="email" id="signup-email" placeholder="seu@email.com" required></div>
-                    <div class="form-group"><label for="signup-password">Senha</label><input type="password" id="signup-password" placeholder="Mínimo 6 caracteres" required></div>
-                    <button type="submit" class="auth-button">Criar Conta</button>
-                </form>
-                <p class="auth-toggle">Já tem uma conta? <a href="#" id="show-login">Faça o login</a></p>
-            </div>
+    <div class="auth-container">
+
+        <div id="login-view">
+            <img src="https://i.imgur.com/iC32a22.png" alt="Logo Meu Cofre" class="auth-logo">
+            <h2>Acessar Meu Cofre</h2>
+            <form id="login-form">
+                <div class="form-group"><label for="login-email">Email</label><input type="email" id="login-email" placeholder="seu@email.com" required></div>
+                <div class="form-group"><label for="login-password">Senha</label><input type="password" id="login-password" required></div>
+                <button type="submit" class="auth-button">Entrar</button>
+            </form>
+            <p class="auth-toggle"><a href="#" id="show-forgot-password">Esqueci minha senha</a></p>
+            <p class="auth-toggle">Não tem uma conta? <a href="#" id="show-signup">Cadastre-se</a></p>
         </div>
+
+        <div id="signup-view" class="hidden">
+            <img src="https://i.imgur.com/iC32a22.png" alt="Logo Meu Cofre" class="auth-logo">
+            <h2>Criar Conta</h2>
+            <form id="signup-form">
+                <div class="form-group"><label for="signup-email">Email</label><input type="email" id="signup-email" placeholder="seu@email.com" required></div>
+                <div class="form-group"><label for="signup-password">Senha</label><input type="password" id="signup-password" placeholder="Mínimo 6 caracteres" required></div>
+                <button type="submit" class="auth-button">Criar Conta</button>
+            </form>
+            <p class="auth-toggle">Já tem uma conta? <a href="#" id="show-login">Faça o login</a></p>
+        </div>
+        
+        <div id="forgot-password-view" class="hidden">
+            <h2>Redefinir Senha</h2>
+            <form id="forgot-password-form">
+                <p style="margin-bottom: 15px;">Digite seu email e enviaremos um link para você criar uma nova senha.</p>
+                <div class="form-group">
+                    <label for="forgot-email">Email</label>
+                    <input type="email" id="forgot-email" placeholder="Digite seu email de cadastro" required>
+                </div>
+                <button type="submit" class="auth-button">Enviar Link de Redefinição</button>
+            </form>
+            <p class="auth-toggle">Lembrou a senha? <a href="#" id="back-to-login">Voltar para o Login</a></p>
+        </div>
+
     </div>
+</div>
 
     <div id="app-section" class="hidden">
         <div class="container">

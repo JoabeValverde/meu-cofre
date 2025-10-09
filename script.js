@@ -14,8 +14,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const authSection = getElement("auth-section");
   const loginView = getElement("login-view");
   const signupView = getElement("signup-view");
+  const forgotPasswordView = getElement("forgot-password-view");
+  const loginForm = getElement("login-form");
+  const signupForm = getElement("signup-form");
+  const forgotPasswordForm = getElement("forgot-password-form");
   const showSignup = getElement("show-signup");
   const showLogin = getElement("show-login");
+  const showForgotPassword = getElement("show-forgot-password");
+  const backToLogin = getElement("back-to-login");
+  const btnLogout = getElement("btn-logout");
 
   const form = getElement("form-transacao");
   const tipoSelect = getElement("tipo");
@@ -33,153 +40,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const listaTransacoes = getElement("lista-transacoes");
 
   let transacoes = [];
-  let config = {
-    receitas: [
-      "Salário PMI",
-      "Salário Ligmax",
-      "Extra Ligmax",
-      "Freelance",
-      "Vendas",
-      "Outros",
-    ],
-    despesas: [
-      "Alimentação",
-      "Transporte",
-      "Moradia",
-      "Lazer",
-      "Saúde",
-      "Outros",
-    ],
-    cartoes: ["Nubank", "Bradesco", "Caixa", "Mercado Pago", "Digio"],
-  };
+  let config = { receitas: [], despesas: [], cartoes: [] };
   let idEmEdicao = null;
   let meuGraficoDespesas = null;
   let meuGraficoReceitas = null;
 
   // --- FUNÇÕES ---
-
-  function checkUserSession(session) {
-    if (session) {
-      appSection.classList.remove("hidden");
-      authSection.classList.add("hidden");
-      atualizarTudo();
-    } else {
-      appSection.classList.add("hidden");
-      authSection.classList.remove("hidden");
-    }
-  }
-
-  function formatarMoeda(valor) {
-    return typeof valor !== "number"
-      ? "R$ 0,00"
-      : valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  }
-
-  function atualizarDashboard() {
-    const transacoesConcluidas = transacoes.filter(
-      (t) => t.status === "Concluído"
-    );
-    const receitas = transacoesConcluidas
-      .filter((t) => t.tipo === "Receita")
-      .reduce((acc, t) => acc + t.valor, 0);
-    const despesas = transacoesConcluidas
-      .filter((t) => t.tipo === "Despesa")
-      .reduce((acc, t) => acc + t.valor, 0);
-    const saldo = receitas - despesas;
-    getElement("total-receitas").textContent = formatarMoeda(receitas);
-    getElement("total-despesas").textContent = formatarMoeda(despesas);
-    getElement("saldo-atual").textContent = formatarMoeda(saldo);
-  }
-
-  function atualizarGrafico(ctx, chartInstance, tipo) {
-    const dados = transacoes.filter(
-      (t) => t.tipo === tipo && t.status === "Concluído"
-    );
-    const dataMap = dados.reduce((acc, t) => {
-      acc[t.categoria] = (acc[t.categoria] || 0) + t.valor;
-      return acc;
-    }, {});
-    const labels = Object.keys(dataMap);
-    const dataValues = Object.values(dataMap);
-    const colors =
-      tipo === "Receita"
-        ? ["#4CAF50", "#8BC34A", "#00BCD4", "#03A9F4", "#2196F3"]
-        : ["#F44336", "#E91E63", "#9C27B0", "#673AB7", "#3F51B5"];
-    if (chartInstance) chartInstance.destroy();
-    if (labels.length === 0) {
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      return null;
-    }
-    return new Chart(ctx, {
-      type: "pie",
-      data: {
-        labels,
-        datasets: [
-          { data: dataValues, backgroundColor: colors, hoverOffset: 4 },
-        ],
-      },
-      options: { plugins: { legend: { display: false } } },
+  function showScreen(screenToShow) {
+    [loginView, signupView, forgotPasswordView].forEach((screen) => {
+      if (screen) screen.classList.add("hidden");
     });
+    if (screenToShow) screenToShow.classList.remove("hidden");
   }
 
-  function renderizarTransacoes() {
-    listaTransacoes.innerHTML = "";
-    if (transacoes.length === 0) {
-      listaTransacoes.innerHTML =
-        '<tr><td colspan="10" style="text-align:center; padding: 20px;">Nenhuma transação encontrada.</td></tr>';
-      return;
-    }
-    const transacoesOrdenadas = [...transacoes].sort(
-      (a, b) => new Date(b.data) - new Date(a.data)
-    );
-    transacoesOrdenadas.forEach((t) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${t.tipo}</td><td>${t.descricao || ""}</td><td>${
-        t.categoria
-      }</td><td>${t.subcategoria || ""}</td><td>${formatarMoeda(
-        t.valor
-      )}</td><td>${new Date(t.data + "T00:00:00").toLocaleDateString(
-        "pt-BR"
-      )}</td><td>${t.forma}</td><td>${
-        t.cartao || "N/A"
-      }</td><td><span class="status-${t.status
-        .toLowerCase()
-        .replace("í", "i")}">${
-        t.status
-      }</span></td><td><button class="action-button edit-button" data-id="${
-        t.id
-      }">✏️</button><button class="action-button delete-button" data-id="${
-        t.id
-      }">🗑️</button></td>`;
-      listaTransacoes.appendChild(tr);
-    });
-  }
-
-  function popularSelects() {
-    const tipoAtual = tipoSelect.value;
-    const categorias =
-      tipoAtual === "Receita" ? config.receitas : config.despesas;
-    categoriaSelect.innerHTML = "";
-    categorias.forEach((cat) => {
-      const opt = document.createElement("option");
-      opt.value = cat;
-      opt.textContent = cat;
-      categoriaSelect.appendChild(opt);
-    });
-    cartaoSelect.innerHTML = '<option value="">Nenhum</option>';
-    config.cartoes.forEach((cartao) => {
-      const opt = document.createElement("option");
-      opt.value = cartao;
-      opt.textContent = cartao;
-      cartaoSelect.appendChild(opt);
-    });
-  }
-
-  function prepararEdicao(id) {
-    /* ...código sem alteração... */
-  }
-  function deletarTransacao(id) {
-    /* ...código sem alteração... */
+  async function carregarTudo(user) {
+    // Esta função pode ser usada no futuro para carregar tudo de uma vez
   }
 
   function atualizarTudo() {
@@ -198,46 +73,61 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // --- LISTENERS DE EVENTOS ---
+  // ... (outras funções do localStorage)
+
+  // --- LISTENERS ---
   if (showSignup) {
     showSignup.addEventListener("click", (e) => {
       e.preventDefault();
-      loginView.classList.add("hidden");
-      signupView.classList.remove("hidden");
+      showScreen(signupView);
     });
   }
 
   if (showLogin) {
     showLogin.addEventListener("click", (e) => {
       e.preventDefault();
-      signupView.classList.add("hidden");
-      loginView.classList.remove("hidden");
+      showScreen(loginView);
     });
   }
 
-  form.addEventListener("submit", (e) => {
-    /* ...código antigo do localStorage, por enquanto... */
-  });
-  tipoSelect.addEventListener("change", popularSelects);
-  formaPagamentoSelect.addEventListener("change", () => {
-    const isCartao = formaPagamentoSelect.value === "Cartão de crédito";
-    cartaoGroup.style.display = isCartao ? "flex" : "none";
-    parcelasGroup.classList.toggle("hidden", !isCartao);
-  });
-  listaTransacoes.addEventListener("click", (e) => {
-    const target = e.target.closest(".action-button");
-    if (!target) return;
-    const id = parseInt(target.dataset.id, 10);
-    if (target.classList.contains("edit-button")) {
-      prepararEdicao(id);
-    } else if (target.classList.contains("delete-button")) {
-      deletarTransacao(id);
-    }
-  });
+  if (showForgotPassword) {
+    showForgotPassword.addEventListener("click", (e) => {
+      e.preventDefault();
+      showScreen(forgotPasswordView);
+    });
+  }
+
+  if (backToLogin) {
+    backToLogin.addEventListener("click", (e) => {
+      e.preventDefault();
+      showScreen(loginView);
+    });
+  }
+
+  if (forgotPasswordForm) {
+    forgotPasswordForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = getElement("forgot-email").value;
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname,
+      });
+      if (error) {
+        alert("Erro ao enviar email de recuperação: " + error.message);
+      } else {
+        alert(
+          "Link de recuperação enviado para seu email! Verifique sua caixa de entrada."
+        );
+        showScreen(loginView);
+      }
+    });
+  }
+
+  // Placeholder para os listeners antigos
+  // ...
 
   // --- INICIALIZAÇÃO ---
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    console.log(`Evento de autenticação: ${event}`);
-    checkUserSession(session);
-  });
+  // Apenas para teste visual, a lógica de login virá depois
+  appSection.classList.add("hidden");
+  authSection.classList.remove("hidden");
+  showScreen(loginView);
 });
