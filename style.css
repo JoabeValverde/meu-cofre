@@ -1,46 +1,181 @@
 :root {
-            --primary-color: #4CAF50; --secondary-color: #F44336; --accent-color: #2196F3;
-            --background-color: #f4f7f6; --card-background: #ffffff; --text-color: #333;
-            --header-bg: #2c3e50; --header-text: #ecf0f1; --shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--background-color); color: var(--text-color); padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header { background-color: var(--header-bg); color: var(--header-text); padding: 20px 0; text-align: center; margin-bottom: 20px; border-radius: 8px; box-shadow: var(--shadow); position: relative; }
-        h1 { font-size: 2em; }
-        .dashboard { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; margin-bottom: 30px; }
-        .card { flex: 1; min-width: 250px; background-color: var(--card-background); padding: 20px; border-radius: 8px; box-shadow: var(--shadow); text-align: center; }
-        .card h3 { font-size: 1.1em; margin-bottom: 10px; color: #555; }
-        .card p { font-size: 2em; font-weight: bold; }
-        .card.receitas p { color: var(--primary-color); } .card.despesas p { color: var(--secondary-color); } .card.saldo p { color: var(--accent-color); }
-        .secao-graficos { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; }
-        .grafico-card { flex: 1; min-width: 300px; background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: var(--shadow); }
-        .grafico-card h2 { text-align: center; margin-bottom: 15px; font-size: 1.2em; color: var(--text-color); }
-        .chart-container { position: relative; height: 350px; width: 100%; max-width: 400px; margin: 0 auto; }
-        .nova-transacao h2, .transacoes h2 { margin-bottom: 15px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
-        #form-transacao { background-color: var(--card-background); padding: 25px; margin-bottom: 30px; border-radius: 8px; box-shadow: var(--shadow); display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { margin-bottom: 5px; font-weight: 600; }
-        .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
-        #btn-submit { grid-column: 1 / -1; padding: 15px; background-color: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold; }
-        .transacoes-tabela { background-color: var(--card-background); border-radius: 8px; overflow-x: auto; box-shadow: var(--shadow); }
-        table { width: 100%; border-collapse: collapse; }
-        table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
-        table th { background-color: #f0f0f0; font-weight: 700; }
-        .tipo-Receita { color: var(--primary-color); font-weight: 600; } .tipo-Despesa { color: var(--secondary-color); font-weight: 600; }
-        .status-concluido { background-color: #e8f5e9; color: var(--primary-color); padding: 4px 8px; border-radius: 12px; font-size: 0.85em; }
-        .status-pendente { background-color: #ffebee; color: var(--secondary-color); padding: 4px 8px; border-radius: 12px; font-size: 0.85em; }
-        .action-button { background: none; border: none; cursor: pointer; font-size: 1.2em; margin-left: 5px; }
-        .action-button.edit-button { color: var(--accent-color); } .action-button:not(.edit-button) { color: var(--secondary-color); }
-        .hidden { display: none !important; }
-        .logout-button { display: none; } /* Escondido nesta versão */
-        @media (max-width: 768px) { body { padding: 10px; } .dashboard, .secao-graficos { flex-direction: column; } }
-
-
-        /* --- ESTILOS DE AUTENTICAÇÃO --- */
-.hidden {
-    display: none !important;
+    --primary-color: #4CAF50;
+    --secondary-color: #F44336;
+    --accent-color: #2196F3;
+    --background-color: #f4f7f6;
+    --card-background: #ffffff;
+    --text-color: #333;
+    --header-bg: #2c3e50;
+    --header-text: #ecf0f1;
+    --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    padding: 20px;
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+header {
+    background-color: var(--header-bg);
+    color: var(--header-text);
+    padding: 20px 0;
+    text-align: center;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    position: relative;
+}
+h1 { font-size: 2em; }
+.dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+.card {
+    flex: 1;
+    min-width: 250px;
+    background-color: var(--card-background);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+.card h3 {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    color: #555;
+}
+.card p {
+    font-size: 2em;
+    font-weight: bold;
+}
+.card.receitas p { color: var(--primary-color); }
+.card.despesas p { color: var(--secondary-color); }
+.card.saldo p { color: var(--accent-color); }
+.secao-graficos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+.grafico-card {
+    flex: 1;
+    min-width: 300px;
+    background-color: var(--card-background);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+.grafico-card h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    color: var(--text-color);
+}
+.chart-container {
+    position: relative;
+    height: 350px;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+.nova-transacao h2, .transacoes h2 {
+    margin-bottom: 15px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+}
+#form-transacao {
+    background-color: var(--card-background);
+    padding: 25px;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    align-items: end;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+.form-group label {
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+.form-group input, .form-group select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+#btn-submit {
+    grid-column: 1 / -1;
+    padding: 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+.actions-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.filter-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.transacoes-tabela {
+    background-color: var(--card-background);
+    border-radius: 8px;
+    overflow-x: auto;
+    box-shadow: var(--shadow);
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+table th, table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap; 
+}
+table th {
+    background-color: #f0f0f0;
+    font-weight: 700;
+}
+.tipo-Receita { color: var(--primary-color); font-weight: 600;}
+.tipo-Despesa { color: var(--secondary-color); font-weight: 600; }
+.status-concluido { background-color: #e8f5e9; color: var(--primary-color); padding: 4px 8px; border-radius: 12px; font-size: 0.85em; }
+.status-pendente { background-color: #ffebee; color: var(--secondary-color); padding: 4px 8px; border-radius: 12px; font-size: 0.85em; }
+.action-button {
+    background: none; border: none;
+    cursor: pointer; font-size: 1.2em;
+    margin-left: 5px;
+}
+.action-button.edit-button { color: var(--accent-color); }
+.action-button:not(.edit-button) { color: var(--secondary-color); }
+.hidden { display: none !important; }
 #auth-section {
     display: flex;
     justify-content: center;
@@ -56,40 +191,20 @@
     max-width: 400px;
     text-align: center;
 }
-.auth-logo {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 20px;
-}
-.auth-container h2 {
-    margin-bottom: 20px;
-    color: var(--text-color);
-}
+.auth-logo { width: 80px; height: 80px; margin-bottom: 20px; }
+.auth-container h2 { margin-bottom: 20px; }
 .auth-button {
-    width: 100%;
-    padding: 12px;
+    width: 100%; padding: 12px;
     background-color: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 1em;
-    font-weight: bold;
-    cursor: pointer;
+    color: white; border: none;
+    border-radius: 4px; font-size: 1em;
+    font-weight: bold; cursor: pointer;
     margin-top: 10px;
 }
-.auth-toggle {
-    margin-top: 20px;
-    font-size: 0.9em;
-}
-.auth-toggle a {
-    color: var(--accent-color);
-    text-decoration: none;
-    font-weight: bold;
-}
+.auth-toggle { margin-top: 20px; font-size: 0.9em; }
+.auth-toggle a { color: var(--accent-color); text-decoration: none; font-weight: bold; }
 .logout-button {
-    position: absolute;
-    right: 20px;
-    top: 50%;
+    position: absolute; right: 20px; top: 50%;
     transform: translateY(-50%);
     padding: 8px 15px;
     border: 1px solid var(--header-text);
@@ -102,4 +217,8 @@
 .logout-button:hover {
     background-color: var(--header-text);
     color: var(--header-bg);
+}
+@media (max-width: 768px) {
+    body { padding: 10px; }
+    .dashboard, .secao-graficos, .actions-filters { flex-direction: column; }
 }
