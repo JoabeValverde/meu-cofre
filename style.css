@@ -131,19 +131,6 @@ h1 { font-size: 2em; }
     font-size: 1.1em;
     font-weight: bold;
 }
-.actions-filters {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-.filter-group {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
 .transacoes-tabela {
     background-color: var(--card-background);
     border-radius: 8px;
@@ -222,4 +209,3 @@ table th {
     body { padding: 10px; }
     .dashboard, .secao-graficos, .actions-filters { flex-direction: column; }
 }
-

@@ -17,7 +17,6 @@
                     <div class="form-group"><label for="login-password">Senha</label><input type="password" id="login-password" required></div>
                     <button type="submit" class="auth-button">Entrar</button>
                 </form>
-                <p class="auth-toggle"><a href="#" id="show-forgot-password">Esqueci minha senha</a></p>
                 <p class="auth-toggle">Não tem uma conta? <a href="#" id="show-signup">Cadastre-se</a></p>
             </div>
             <div id="signup-view" class="hidden">
@@ -29,21 +28,6 @@
                     <button type="submit" class="auth-button">Criar Conta</button>
                 </form>
                 <p class="auth-toggle">Já tem uma conta? <a href="#" id="show-login">Faça o login</a></p>
-            </div>
-            <div id="forgot-password-view" class="hidden">
-                <h2>Redefinir Senha</h2>
-                <form id="forgot-password-form">
-                    <div class="form-group"><label for="forgot-email">Email</label><input type="email" id="forgot-email" placeholder="Digite seu email de cadastro" required></div>
-                    <button type="submit" class="auth-button">Enviar Link de Redefinição</button>
-                </form>
-                <p class="auth-toggle">Lembrou a senha? <a href="#" id="back-to-login">Voltar para o Login</a></p>
-            </div>
-            <div id="reset-password-view" class="hidden">
-                <h2>Crie sua Nova Senha</h2>
-                <form id="reset-password-form">
-                    <div class="form-group"><label for="new-password">Nova Senha</label><input type="password" id="new-password" placeholder="Mínimo 6 caracteres" required></div>
-                    <button type="submit" class="auth-button">Salvar Nova Senha</button>
-                </form>
             </div>
         </div>
     </div>
@@ -82,12 +66,6 @@
             </section>
             <section class="transacoes">
                 <h2>Histórico de Transações</h2>
-                <div class="actions-filters">
-                    <div class="filter-group">
-                        <label for="filtro-tipo">Filtrar por tipo:</label><select id="filtro-tipo"><option value="Todos">Todos</option><option value="Receita">Receita</option><option value="Despesa">Despesa</option></select>
-                        <label for="filtro-cartao">Filtrar por cartão:</label><select id="filtro-cartao"><option value="Todos">Todos</option></select>
-                    </div>
-                </div>
                 <div class="transacoes-tabela">
                     <table>
                         <thead>

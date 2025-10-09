@@ -7,7 +7,15 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ---------------------------------
 
 document.addEventListener("DOMContentLoaded", () => {
-  const getElement = (id) => document.getElementById(id);
+  // --- FUNÇÕES DE AUXÍLIO ---
+  function getElement(id) {
+    const element = document.getElementById(id);
+    if (!element) {
+      // Este console.error é útil para debug, mas vamos removê-lo por enquanto para evitar confusão.
+      // console.error(`ERRO: Elemento com ID '${id}' não foi encontrado no HTML.`);
+    }
+    return element;
+  }
 
   // --- SELEÇÃO DE ELEMENTOS DO DOM ---
   const authSection = getElement("auth-section");
@@ -16,15 +24,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupView = getElement("signup-view");
   const forgotPasswordView = getElement("forgot-password-view");
   const resetPasswordView = getElement("reset-password-view");
+
   const loginForm = getElement("login-form");
   const signupForm = getElement("signup-form");
   const forgotPasswordForm = getElement("forgot-password-form");
   const resetPasswordForm = getElement("reset-password-form");
+
   const showSignup = getElement("show-signup");
   const showLogin = getElement("show-login");
   const showForgotPassword = getElement("show-forgot-password");
   const backToLogin = getElement("back-to-login");
   const btnLogout = getElement("btn-logout");
+
   const form = getElement("form-transacao");
   const tipoSelect = getElement("tipo");
   const categoriaSelect = getElement("categoria");
@@ -42,8 +53,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const totalReceitasEl = getElement("total-receitas");
   const totalDespesasEl = getElement("total-despesas");
   const saldoAtualEl = getElement("saldo-atual");
-  const filtroTipo = getElement("filtro-tipo");
-  const filtroCartao = getElement("filtro-cartao");
 
   // --- ESTADO DA APLICAÇÃO ---
   let transacoes = [];
@@ -53,26 +62,28 @@ document.addEventListener("DOMContentLoaded", () => {
   let meuGraficoReceitas = null;
 
   // --- FUNÇÕES ---
-  const showScreen = (screenToShow) => {
+
+  function showScreen(screenToShow) {
     [loginView, signupView, forgotPasswordView, resetPasswordView].forEach(
       (screen) => {
         if (screen) screen.classList.add("hidden");
       }
     );
     if (screenToShow) screenToShow.classList.remove("hidden");
-  };
+  }
 
-  const showApp = (show) => {
-    authSection.classList.toggle("hidden", show);
-    appSection.classList.toggle("hidden", !show);
-  };
+  function showApp(show) {
+    if (authSection) authSection.classList.toggle("hidden", show);
+    if (appSection) appSection.classList.toggle("hidden", !show);
+  }
 
-  const carregarTudo = async (user) => {
+  async function carregarTudo(user) {
     await carregarConfiguracoesUsuario(user);
     await carregarTransacoes(user);
-  };
+    atualizarTudo();
+  }
 
-  const carregarConfiguracoesUsuario = async (user) => {
+  async function carregarConfiguracoesUsuario(user) {
     const fallbackConfig = {
       receitas: ["Salário", "Freelance", "Vendas", "Outros"],
       despesas: ["Alimentação", "Transporte", "Moradia", "Lazer", "Outros"],
@@ -88,7 +99,9 @@ document.addEventListener("DOMContentLoaded", () => {
       ]);
       if (catRes.error) throw catRes.error;
       if (carRes.error) throw carRes.error;
-      config.receitas = catRes.data.map((c) => c.nome);
+      config.receitas = catRes.data
+        .filter((c) => c.tipo === "Receita")
+        .map((c) => c.nome);
       config.despesas = catRes.data
         .filter((c) => c.tipo === "Despesa")
         .map((c) => c.nome);
@@ -102,10 +115,13 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Erro ao carregar configurações:", error);
       config = fallbackConfig;
     }
-  };
+  }
 
-  const carregarTransacoes = async (user) => {
-    if (!user) return;
+  async function carregarTransacoes(user) {
+    if (!user) {
+      transacoes = [];
+      return;
+    }
     try {
       const { data, error } = await supabaseClient
         .from("transacoes")
@@ -114,18 +130,19 @@ document.addEventListener("DOMContentLoaded", () => {
         .order("data", { ascending: false });
       if (error) throw error;
       transacoes = data || [];
-      atualizarTudo();
     } catch (error) {
       console.error("Erro ao buscar transações:", error);
+      transacoes = [];
     }
-  };
+  }
 
-  const formatarMoeda = (valor) =>
-    typeof valor !== "number"
+  function formatarMoeda(valor) {
+    return typeof valor !== "number"
       ? "R$ 0,00"
       : valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
 
-  const atualizarDashboard = () => {
+  function atualizarDashboard() {
     if (!transacoes || !totalReceitasEl) return;
     const transacoesConcluidas = transacoes.filter(
       (t) => t.status === "Concluído"
@@ -142,9 +159,9 @@ document.addEventListener("DOMContentLoaded", () => {
     saldoAtualEl.textContent = formatarMoeda(saldo);
     saldoAtualEl.style.color =
       saldo < 0 ? "var(--secondary-color)" : "var(--accent-color)";
-  };
+  }
 
-  const atualizarGraficoDespesas = () => {
+  function atualizarGraficoDespesas() {
     const canvas = getElement("graficoDespesas");
     if (!canvas || !transacoes) return;
     const ctx = canvas.getContext("2d");
@@ -182,9 +199,9 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       options: { plugins: { legend: { display: false } } },
     });
-  };
+  }
 
-  const atualizarGraficoReceitas = () => {
+  function atualizarGraficoReceitas() {
     const canvas = getElement("graficoReceitas");
     if (!canvas || !transacoes) return;
     const ctx = canvas.getContext("2d");
@@ -222,9 +239,9 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       options: { plugins: { legend: { display: false } } },
     });
-  };
+  }
 
-  const renderizarTransacoes = () => {
+  function renderizarTransacoes() {
     if (!listaTransacoes) return;
     listaTransacoes.innerHTML =
       !transacoes || transacoes.length === 0
@@ -252,9 +269,9 @@ document.addEventListener("DOMContentLoaded", () => {
         })">🗑️</button></td>`;
         listaTransacoes.appendChild(tr);
       });
-  };
+  }
 
-  const popularSelects = () => {
+  function popularSelects() {
     if (!tipoSelect || !categoriaSelect || !cartaoSelect) return;
     const tipoAtual = tipoSelect.value;
     const categorias =
@@ -277,7 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cartaoSelect.appendChild(opt.cloneNode(true));
       if (filtroCartao) filtroCartao.appendChild(opt);
     });
-  };
+  }
 
   window.prepararEdicao = (id) => {
     const transacao = transacoes.find((t) => t.id === id);
@@ -294,18 +311,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (transacao.cartao) cartaoSelect.value = transacao.cartao;
     statusSelect.value = transacao.status;
     idEmEdicao = id;
-    btnSubmit.textContent = "Salvar Alterações";
+    getElement("btn-submit").textContent = "Salvar Alterações";
     form.scrollIntoView({ behavior: "smooth" });
   };
 
-  const cancelarEdicao = () => {
+  function cancelarEdicao() {
     idEmEdicao = null;
     form.reset();
-    dataInput.valueAsDate = new Date();
-    btnSubmit.textContent = "Adicionar Transação";
-    formaPagamentoSelect.dispatchEvent(new Event("change"));
-    tipoSelect.dispatchEvent(new Event("change"));
-  };
+    if (dataInput) dataInput.valueAsDate = new Date();
+    getElement("btn-submit").textContent = "Adicionar Transação";
+    getElement("forma").dispatchEvent(new Event("change"));
+    getElement("tipo").dispatchEvent(new Event("change"));
+  }
 
   window.deletarTransacao = async (id) => {
     if (confirm("Tem certeza que deseja deletar?")) {
@@ -324,14 +341,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const atualizarTudo = () => {
+  function atualizarTudo() {
     if (!document.body.isConnected) return;
     atualizarDashboard();
     renderizarTransacoes();
     popularSelects();
     atualizarGraficoDespesas();
     atualizarGraficoReceitas();
-  };
+  }
 
   // --- LISTENERS DE EVENTOS ---
   if (loginForm)
@@ -357,7 +374,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (error) {
         alert("Erro: " + error.message);
       } else {
-        alert("Conta criada! Verifique seu email para confirmar.");
+        alert("Conta criada! Verifique seu email.");
         showScreen(loginView);
       }
     });
@@ -369,12 +386,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (showSignup)
     showSignup.addEventListener("click", (e) => {
       e.preventDefault();
-      showScreen(signupView);
+      showScreen(loginView);
     });
   if (showLogin)
     showLogin.addEventListener("click", (e) => {
       e.preventDefault();
-      showScreen(loginView);
+      showScreen(signupView);
     });
   if (showForgotPassword)
     showForgotPassword.addEventListener("click", (e) => {
@@ -397,7 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (error) {
         alert("Erro ao enviar email: " + error.message);
       } else {
-        alert("Email de recuperação enviado! Verifique sua caixa de entrada.");
+        alert("Email de recuperação enviado!");
         showScreen(loginView);
       }
     });
@@ -416,9 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (error) {
         alert("Erro ao atualizar a senha: " + error.message);
       } else {
-        alert(
-          "Senha atualizada com sucesso! Por favor, faça o login com sua nova senha."
-        );
+        alert("Senha atualizada com sucesso! Faça o login.");
         location.hash = "";
         showScreen(loginView);
       }
@@ -431,15 +446,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const {
         data: { user },
       } = await supabaseClient.auth.getUser();
-      if (!user) {
-        alert("Você precisa estar logado.");
-        return;
-      }
+      if (!user) return alert("Você precisa estar logado.");
       try {
         const valorTotal = parseFloat(valorInput.value);
         const numeroParcelas = parseInt(parcelasInput.value, 10);
         const formaPagamento = formaPagamentoSelect.value;
         const descricao = descricaoInput.value.trim();
+
         if (formaPagamento === "Cartão de crédito" && numeroParcelas > 1) {
           const transacoesParaSalvar = [];
           const valorParcela = parseFloat(
@@ -493,18 +506,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 : null,
             user_id: user.id,
           };
-          const { error } =
-            idEmEdicao !== null
-              ? await supabaseClient
-                  .from("transacoes")
-                  .update(dadosDaTransacao)
-                  .eq("id", idEmEdicao)
-                  .select()
-              : await supabaseClient
-                  .from("transacoes")
-                  .insert([dadosDaTransacao])
-                  .select();
-          if (error) throw error;
+          if (idEmEdicao) {
+            delete dadosDaTransacao.user_id; // Não se deve atualizar o dono da transação
+            const { error } = await supabaseClient
+              .from("transacoes")
+              .update(dadosDaTransacao)
+              .eq("id", idEmEdicao)
+              .select();
+            if (error) throw error;
+          } else {
+            const { error } = await supabaseClient
+              .from("transacoes")
+              .insert([dadosDaTransacao])
+              .select();
+            if (error) throw error;
+          }
         }
         await carregarTransacoes(user);
         cancelarEdicao();
