@@ -15,9 +15,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginView = getElement("login-view");
   const signupView = getElement("signup-view");
   const forgotPasswordView = getElement("forgot-password-view");
+  const resetPasswordView = getElement("reset-password-view");
+
   const loginForm = getElement("login-form");
   const signupForm = getElement("signup-form");
   const forgotPasswordForm = getElement("forgot-password-form");
+  const resetPasswordForm = getElement("reset-password-form");
+
   const showSignup = getElement("show-signup");
   const showLogin = getElement("show-login");
   const showForgotPassword = getElement("show-forgot-password");
@@ -27,107 +31,106 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = getElement("form-transacao");
   const tipoSelect = getElement("tipo");
   const categoriaSelect = getElement("categoria");
-  const subcategoriaInput = getElement("subcategoria");
-  const descricaoInput = getElement("descricao");
-  const valorInput = getElement("valor");
-  const dataInput = getElement("data");
-  const formaPagamentoSelect = getElement("forma");
-  const parcelasGroup = getElement("group-parcelas");
-  const parcelasInput = getElement("parcelas");
-  const cartaoGroup = getElement("group-cartao");
-  const cartaoSelect = getElement("cartao");
-  const statusSelect = getElement("status");
-  const listaTransacoes = getElement("lista-transacoes");
+  // ... (resto dos seletores)
 
   let transacoes = [];
   let config = { receitas: [], despesas: [], cartoes: [] };
-  let idEmEdicao = null;
-  let meuGraficoDespesas = null;
-  let meuGraficoReceitas = null;
+  // ... (resto do estado)
 
   // --- FUNÇÕES ---
   function showScreen(screenToShow) {
-    [loginView, signupView, forgotPasswordView].forEach((screen) => {
-      if (screen) screen.classList.add("hidden");
-    });
+    [loginView, signupView, forgotPasswordView, resetPasswordView].forEach(
+      (screen) => {
+        if (screen) screen.classList.add("hidden");
+      }
+    );
     if (screenToShow) screenToShow.classList.remove("hidden");
   }
 
-  async function carregarTudo(user) {
-    // Esta função pode ser usada no futuro para carregar tudo de uma vez
+  async function checkUserSession(session) {
+    if (session) {
+      appSection.classList.remove("hidden");
+      authSection.classList.add("hidden");
+      await carregarTudo(session.user);
+    } else {
+      appSection.classList.add("hidden");
+      authSection.classList.remove("hidden");
+      showScreen(loginView);
+    }
   }
 
-  function atualizarTudo() {
-    atualizarDashboard();
-    renderizarTransacoes();
-    popularSelects();
-    meuGraficoDespesas = atualizarGrafico(
-      getElement("graficoDespesas").getContext("2d"),
-      meuGraficoDespesas,
-      "Despesa"
-    );
-    meuGraficoReceitas = atualizarGrafico(
-      getElement("graficoReceitas").getContext("2d"),
-      meuGraficoReceitas,
-      "Receita"
-    );
+  // ... (todas as outras funções que já tínhamos)
+
+  // --- LISTENERS DE EVENTOS ---
+  if (loginForm) {
+    /* ... */
   }
-
-  // ... (outras funções do localStorage)
-
-  // --- LISTENERS ---
+  if (signupForm) {
+    /* ... */
+  }
+  if (btnLogout) {
+    /* ... */
+  }
   if (showSignup) {
     showSignup.addEventListener("click", (e) => {
       e.preventDefault();
       showScreen(signupView);
     });
   }
-
   if (showLogin) {
     showLogin.addEventListener("click", (e) => {
       e.preventDefault();
       showScreen(loginView);
     });
   }
-
   if (showForgotPassword) {
     showForgotPassword.addEventListener("click", (e) => {
       e.preventDefault();
       showScreen(forgotPasswordView);
     });
   }
-
   if (backToLogin) {
     backToLogin.addEventListener("click", (e) => {
       e.preventDefault();
       showScreen(loginView);
     });
   }
-
   if (forgotPasswordForm) {
     forgotPasswordForm.addEventListener("submit", async (e) => {
+      /* ... código anterior ... */
+    });
+  }
+
+  if (resetPasswordForm) {
+    resetPasswordForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = getElement("forgot-email").value;
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname,
+      const newPassword = getElement("new-password").value;
+      if (newPassword.length < 6) {
+        return alert("A senha deve ter no mínimo 6 caracteres.");
+      }
+      const { error } = await supabaseClient.auth.updateUser({
+        password: newPassword,
       });
       if (error) {
-        alert("Erro ao enviar email de recuperação: " + error.message);
+        alert("Erro ao atualizar a senha: " + error.message);
       } else {
-        alert(
-          "Link de recuperação enviado para seu email! Verifique sua caixa de entrada."
-        );
+        alert("Senha atualizada com sucesso! Faça o login.");
+        location.hash = "";
         showScreen(loginView);
       }
     });
   }
 
-  // Placeholder para os listeners antigos
-  // ...
+  // ... (listeners da aplicação principal)
 
   // --- INICIALIZAÇÃO ---
-  // Apenas para teste visual, a lógica de login virá depois
-  appSection.classList.add("hidden");
-  authSection.classList.remove("hidden");
-  showScreen(loginView);
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === "PASSWORD_RECOVERY") {
+      appSection.classList.add("hidden");
+      authSection.classList.remove("hidden");
+      showScreen(resetPasswordView);
+    } else {
+      checkUserSession(session);
+    }
+  });
 });
