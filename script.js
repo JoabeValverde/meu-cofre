@@ -7,7 +7,6 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ---------------------------------
 
 document.addEventListener("DOMContentLoaded", () => {
-  // --- FUNÇÃO DE AUXÍLIO ---
   function getElement(id) {
     const element = document.getElementById(id);
     if (!element) {
@@ -25,18 +24,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupView = getElement("signup-view");
   const forgotPasswordView = getElement("forgot-password-view");
   const resetPasswordView = getElement("reset-password-view");
-
   const loginForm = getElement("login-form");
   const signupForm = getElement("signup-form");
   const forgotPasswordForm = getElement("forgot-password-form");
   const resetPasswordForm = getElement("reset-password-form");
-
   const showSignup = getElement("show-signup");
   const showLogin = getElement("show-login");
   const showForgotPassword = getElement("show-forgot-password");
   const backToLogin = getElement("back-to-login");
   const btnLogout = getElement("btn-logout");
-
   const form = getElement("form-transacao");
   const tipoSelect = getElement("tipo");
   const categoriaSelect = getElement("categoria");
@@ -366,26 +362,39 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (error) alert("Erro: " + error.message);
     });
-  if (signupForm)
+
+  if (signupForm) {
     signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const pass = getElement("signup-password").value;
-      if (pass.length < 6) {
+      const email = getElement("signup-email").value;
+      const password = getElement("signup-password").value;
+      if (password.length < 6) {
         return alert("A senha deve ter no mínimo 6 caracteres.");
       }
-      const { error } = await supabaseClient.auth.signUp({
-        email: getElement("signup-email").value,
-        password: pass,
+
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
       });
+
       if (error) {
-        alert("Erro: " + error.message);
+        alert("Erro ao criar conta: " + error.message);
       } else {
-        alert(
-          "Conta criada! Verifique seu email para confirmar (se aplicável)."
-        );
+        // O objeto 'data.user.identities' ajuda a saber se a confirmação de email está ativa
+        if (
+          data.user &&
+          data.user.identities &&
+          data.user.identities.length === 0
+        ) {
+          alert("Conta criada com sucesso! Você já pode fazer o login.");
+        } else {
+          alert("Conta criada! Verifique seu email para finalizar o cadastro.");
+        }
         showScreen(loginView);
       }
     });
+  }
+
   if (btnLogout)
     btnLogout.addEventListener(
       "click",
@@ -417,12 +426,12 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const email = getElement("forgot-email").value;
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname,
+        redirectTo: window.location.href.split("#")[0],
       });
       if (error) {
         alert("Erro ao enviar email: " + error.message);
       } else {
-        alert("Email de recuperação enviado! Verifique sua caixa de entrada.");
+        alert("Email de recuperação enviado!");
         showScreen(loginView);
       }
     });
@@ -441,9 +450,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (error) {
         alert("Erro ao atualizar a senha: " + error.message);
       } else {
-        alert(
-          "Senha atualizada com sucesso! Por favor, faça o login com sua nova senha."
-        );
+        alert("Senha atualizada com sucesso! Por favor, faça o login.");
         location.hash = "";
         showScreen(loginView);
       }
@@ -457,14 +464,14 @@ document.addEventListener("DOMContentLoaded", () => {
         data: { user },
       } = await supabaseClient.auth.getUser();
       if (!user) {
-        alert("Você precisa estar logado.");
-        return;
+        return alert("Você precisa estar logado.");
       }
       try {
         const valorTotal = parseFloat(valorInput.value);
         const numeroParcelas = parseInt(parcelasInput.value, 10);
         const formaPagamento = formaPagamentoSelect.value;
         const descricao = descricaoInput.value.trim();
+
         if (formaPagamento === "Cartão de crédito" && numeroParcelas > 1) {
           const transacoesParaSalvar = [];
           const valorParcela = parseFloat(
@@ -473,6 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const dataInicial = new Date(dataInput.value + "T03:00:00");
           const grupoParcelaUUID = crypto.randomUUID();
           let somaParcelas = 0;
+
           for (let i = 0; i < numeroParcelas; i++) {
             const dataParcela = new Date(dataInicial);
             dataParcela.setMonth(dataInicial.getMonth() + i);
@@ -518,18 +526,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 : null,
             user_id: user.id,
           };
-          const { error } =
-            idEmEdicao !== null
-              ? await supabaseClient
-                  .from("transacoes")
-                  .update(dadosDaTransacao)
-                  .eq("id", idEmEdicao)
-                  .select()
-              : await supabaseClient
-                  .from("transacoes")
-                  .insert([dadosDaTransacao])
-                  .select();
-          if (error) throw error;
+          if (idEmEdicao) {
+            delete dadosDaTransacao.user_id;
+            const { error } = await supabaseClient
+              .from("transacoes")
+              .update(dadosDaTransacao)
+              .eq("id", idEmEdicao)
+              .select();
+            if (error) throw error;
+          } else {
+            const { error } = await supabaseClient
+              .from("transacoes")
+              .insert([dadosDaTransacao])
+              .select();
+            if (error) throw error;
+          }
         }
         await carregarTransacoes(user);
         cancelarEdicao();
@@ -550,14 +561,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- INICIALIZAÇÃO ---
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    // Lógica para lidar com a recuperação de senha
-    const hash = window.location.hash;
-    if (hash.includes("type=recovery")) {
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    if (event === "PASSWORD_RECOVERY") {
       showApp(false);
       showScreen(resetPasswordView);
+    } else if (session) {
+      showApp(true);
+      await carregarTudo(session.user);
     } else {
-      checkUserSession(session);
+      showApp(false);
+      showScreen(loginView);
     }
   });
 });
