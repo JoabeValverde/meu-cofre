@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- SELEÇÃO DE ELEMENTOS DO DOM ---
+  
   const authSection = getElement("auth-section");
   const appSection = getElement("app-section");
   const loginView = getElement("login-view");
@@ -50,8 +51,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const totalReceitasEl = getElement("total-receitas");
   const totalDespesasEl = getElement("total-despesas");
   const saldoAtualEl = getElement("saldo-atual");
+  const mainDashboard = getElement("main-dashboard");
+  const configSection = getElement("config-section");
+  const btnConfig = getElement("btn-config");
+  const btnCloseConfig = getElement("btn-close-config");
   const filtroTipo = getElement("filtro-tipo");
   const filtroCartao = getElement("filtro-cartao");
+  
 
   // --- ESTADO DA APLICAÇÃO ---
   let transacoes = [];
@@ -73,6 +79,17 @@ document.addEventListener("DOMContentLoaded", () => {
   function showApp(show) {
     if (authSection) authSection.classList.toggle("hidden", show);
     if (appSection) appSection.classList.toggle("hidden", !show);
+  }
+
+  function toggleConfigScreen(show) {
+    if (elements.configSection)
+      elements.configSection.classList.toggle("hidden", !show);
+    if (elements.mainDashboard)
+      elements.mainDashboard.style.filter = show ? "blur(5px)" : "none";
+    if (show) {
+      // Esta linha será importante no futuro para carregar os dados na tela
+      // renderizarListasConfig();
+    }
   }
 
   async function carregarTudo(user) {
@@ -388,6 +405,16 @@ document.addEventListener("DOMContentLoaded", () => {
           alert("Conta criada! Verifique seu email para finalizar o cadastro.");
         }
         showScreen(loginView);
+      }
+      if (elements.btnConfig) {
+        elements.btnConfig.addEventListener("click", () =>
+          toggleConfigScreen(true)
+        );
+      }
+      if (elements.btnCloseConfig) {
+        elements.btnCloseConfig.addEventListener("click", () =>
+          toggleConfigScreen(false)
+        );
       }
     });
   if (btnLogout)
